@@ -4,11 +4,13 @@ import { pickOne } from "../api"
 import { finaleLines } from "../content"
 import { clock } from "../hooks"
 import { copyText, downloadHtml, rankFor, reportDocument, textReport } from "../report"
+import { shareEndCard } from "../shareCard"
 import Figure from "./Figure"
 
 export default function Celebration({ result, puzzle, cells, seconds, penalty, stats, log, onClose }) {
   const [finale] = useState(() => pickOne(finaleLines))
   const [copied, setCopied] = useState(null)
+  const [cardNote, setCardNote] = useState(null)
   const scene = useRef(null)
   const { culprit, solution } = result
   const rank = rankFor(stats)
@@ -17,6 +19,15 @@ export default function Celebration({ result, puzzle, cells, seconds, penalty, s
   async function copy() {
     setCopied((await copyText(textReport(data))) ? "yes" : "no")
     setTimeout(() => setCopied(null), 3500)
+  }
+
+  async function shareCard() {
+    setCardNote(null)
+    const outcome = await shareEndCard(data)
+    if (outcome === "shared") setCardNote("shared")
+    else if (outcome === "saved") setCardNote("saved")
+    else if (outcome === "no") setCardNote("no")
+    if (outcome !== "cancel") setTimeout(() => setCardNote(null), 3500)
   }
 
   useEffect(() => {
@@ -80,7 +91,10 @@ export default function Celebration({ result, puzzle, cells, seconds, penalty, s
           <p className="mayor-line">{finale}</p>
           <p className="rank-joke">{rank.joke}</p>
           <div className="scene-actions">
-            <button type="button" className="solid" onClick={copy}>
+            <button type="button" className="solid" onClick={shareCard}>
+              Share the end card
+            </button>
+            <button type="button" className="ghost" onClick={copy}>
               Copy the report
             </button>
             <button
@@ -98,6 +112,9 @@ export default function Celebration({ result, puzzle, cells, seconds, penalty, s
             </Link>
           </div>
           <p className="copy-note" role="status">
+            {cardNote === "shared" && "Shared. Mayor Lewis hopes you captioned it well."}
+            {cardNote === "saved" && "Saved a PNG. Post it wherever the pie jokes live."}
+            {cardNote === "no" && "Could not build the card. The full case file download still works."}
             {copied === "yes" && "Copied. Paste it somewhere smug."}
             {copied === "no" && "Your browser blocked copying. The full case file download still works."}
           </p>

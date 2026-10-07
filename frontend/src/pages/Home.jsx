@@ -6,11 +6,14 @@ import { LedgerSkeleton } from "../components/Skeletons"
 import TableForm from "../components/TableForm"
 import { apiUrl } from "../api"
 import { groundRule, homeTease, story } from "../content"
+import { clock } from "../hooks"
+import { clearSave, hasProgress, loadSave } from "../storage"
 
 export default function Home() {
   const [puzzle, setPuzzle] = useState(null)
   const [failed, setFailed] = useState(false)
   const [gate, setGate] = useState(null)
+  const [save] = useState(() => (hasProgress() ? loadSave() : null))
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -31,6 +34,11 @@ export default function Home() {
     }
   }, [])
 
+  function startFresh() {
+    clearSave()
+    navigate("/case")
+  }
+
   return (
     <div className="home">
       <Masthead />
@@ -44,14 +52,43 @@ export default function Home() {
             </p>
           ))}
           <p className="ground">{groundRule}</p>
-          <Link className="enter" to="/case">
-            Take the case
-          </Link>
-          <p className="table-links">
-            <Link to="/practice">Show me how</Link>
-            <button type="button" onClick={() => setGate("create")}>Open a table</button>
-            <button type="button" onClick={() => setGate("join")}>Join a table</button>
-          </p>
+          {save ? (
+            <>
+              <Link className="enter" to="/case">
+                Continue the case
+              </Link>
+              <p className="resume-note">
+                Sheet in this browser · about {clock(Math.floor((save.elapsedMs ?? 0) / 1000))} on the clock
+              </p>
+              <p className="table-links">
+                <button type="button" onClick={startFresh}>
+                  Start a fresh sheet
+                </button>
+                <Link to="/practice">Show me how</Link>
+                <button type="button" onClick={() => setGate("create")}>
+                  Open a table
+                </button>
+                <button type="button" onClick={() => setGate("join")}>
+                  Join a table
+                </button>
+              </p>
+            </>
+          ) : (
+            <>
+              <Link className="enter" to="/case">
+                Take the case
+              </Link>
+              <p className="table-links">
+                <Link to="/practice">Show me how</Link>
+                <button type="button" onClick={() => setGate("create")}>
+                  Open a table
+                </button>
+                <button type="button" onClick={() => setGate("join")}>
+                  Join a table
+                </button>
+              </p>
+            </>
+          )}
           <p className="judges">{homeTease}</p>
           {gate && (
             <TableForm
