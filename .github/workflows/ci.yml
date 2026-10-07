@@ -9,6 +9,12 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+  checks: write
+
 jobs:
   backend:
     name: Backend
@@ -17,6 +23,11 @@ jobs:
       run:
         working-directory: backend
     steps:
+      - name: Notify Vercel
+        uses: vercel/repository-dispatch/actions/status@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          name: "Vercel - the-grange-files: Backend"
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -33,6 +44,11 @@ jobs:
       run:
         working-directory: frontend
     steps:
+      - name: Notify Vercel
+        uses: vercel/repository-dispatch/actions/status@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          name: "Vercel - the-grange-files: Frontend"
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:

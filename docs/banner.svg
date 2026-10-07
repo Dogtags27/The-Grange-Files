@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 320" role="img" aria-label="The Grange Files case banner">
+  <defs>
+    <pattern id="grain" width="4" height="4" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1.5" r="0.45" fill="#241910" opacity="0.06"/>
+      <circle cx="3.2" cy="3" r="0.35" fill="#241910" opacity="0.05"/>
+    </pattern>
+  </defs>
+
+  <rect width="960" height="320" fill="#efe4d0"/>
+  <rect width="960" height="320" fill="url(#grain)"/>
+  <rect x="18" y="18" width="924" height="284" fill="none" stroke="#241910" stroke-width="3"/>
+  <rect x="28" y="28" width="904" height="264" fill="none" stroke="#241910" stroke-width="1" opacity="0.45"/>
+
+  <rect x="48" y="48" width="132" height="36" fill="#c8102e"/>
+  <text x="114" y="72" text-anchor="middle" fill="#efe4d0" font-family="Georgia, 'Times New Roman', serif" font-size="15" font-weight="700" letter-spacing="1.5">FILE CS5002-1</text>
+
+  <text x="200" y="73" fill="#241910" font-family="Georgia, 'Times New Roman', serif" font-size="15" opacity="0.7">Fall Fair · Grange Hall · overnight</text>
+
+  <text x="48" y="138" fill="#241910" font-family="Georgia, 'Times New Roman', serif" font-size="46" font-weight="700">The Grange Files</text>
+  <text x="48" y="178" fill="#241910" font-family="Georgia, 'Times New Roman', serif" font-size="22">Someone wrecked the Grange Display.</text>
+  <text x="48" y="212" fill="#241910" font-family="Georgia, 'Times New Roman', serif" font-size="18" opacity="0.82">Find who · where · with what · under which alibi.</text>
+
+  <!-- tiny logic block -->
+  <g transform="translate(690,78)" fill="none" stroke="#241910" stroke-width="2">
+    <rect x="0" y="28" width="200" height="170" fill="#f6eee0"/>
+    <text x="100" y="18" text-anchor="middle" fill="#241910" stroke="none" font-family="Georgia, 'Times New Roman', serif" font-size="13">suspects</text>
+    <path d="M40 28 V198 M80 28 V198 M120 28 V198 M160 28 V198"/>
+    <path d="M0 62 H200 M0 96 H200 M0 130 H200 M0 164 H200"/>
+    <path d="M48 74 L72 98 M72 74 L48 98" stroke="#c8102e" stroke-width="3.5"/>
+    <path d="M88 108 L112 132 M112 108 L88 132" stroke="#c8102e" stroke-width="3.5"/>
+    <path d="M128 74 L152 98 M152 74 L128 98" stroke="#c8102e" stroke-width="3.5"/>
+    <circle cx="100" cy="147" r="9" stroke="#1e6b3c" stroke-width="3.5"/>
+    <path d="M94 147 L98 151 L108 139" stroke="#1e6b3c" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>
+  </g>
+
+  <text x="48" y="268" fill="#241910" font-family="Georgia, 'Times New Roman', serif" font-size="14" opacity="0.65">MSCS Align · CS5002 · not an official Northeastern project</text>
+</svg>
