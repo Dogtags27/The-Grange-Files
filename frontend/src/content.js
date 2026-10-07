@@ -102,7 +102,7 @@ export const tableRules = [
   "Up to five people share one sheet, one clock, and one Elder bill. His minutes come off everyone's time.",
   "Anyone can tick, cross, undo, redo, and pencil. A pencil note shows in that person's color.",
   "The lineup opens only when every tick is right. Each of you circles a suspect. If you all agree, the envelope opens on every screen. If you split, Mayor Lewis waits, and the bigger group can go ahead.",
-  "Closing the tab drops your seat after about a minute. If everyone is gone, the table is thrown out 15 minutes later. Nothing here is written to a database.",
+  "If you go quiet for five minutes you get a warning. Two more minutes without a reply and your seat is freed. Closing the tab drops you after about eight minutes. If everyone is gone, the table is thrown out 15 minutes later.",
   "A shared table does not touch the solo case saved in this browser.",
 ]
 

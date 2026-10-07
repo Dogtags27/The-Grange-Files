@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import { pickOne } from "./api"
 import { nudge } from "./content"
+import { splitClue } from "./logic"
 
 export const NUDGE_EVERY_MS = 10 * 60 * 1000
 export const NUDGE_VISIBLE_MS = 30 * 1000
@@ -53,6 +54,24 @@ export function useNow(step = 1000) {
   }, [step])
   return now
 }
+
+function useMedia(query) {
+  return useSyncExternalStore(
+    (notify) => {
+      const list = window.matchMedia(query)
+      list.addEventListener("change", notify)
+      return () => list.removeEventListener("change", notify)
+    },
+    () => window.matchMedia(query).matches,
+    () => false,
+  )
+}
+
+export function useParsedClues(clues, values) {
+  return useMemo(() => clues.map((clue) => splitClue(clue, values)), [clues, values])
+}
+
+export const useCompact = () => useMedia("(max-width: 700px), (max-height: 500px) and (pointer: coarse)")
 
 const pad = (n) => String(n).padStart(2, "0")
 

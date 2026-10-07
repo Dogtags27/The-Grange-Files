@@ -6,12 +6,13 @@ import Doubt from "../components/Doubt"
 import { ElderConfirm, ElderResult } from "../components/Elder"
 import LogicSheet from "../components/LogicSheet"
 import Mark from "../components/Mark"
+import MobileWorkspace, { HowTo } from "../components/MobileWorkspace"
 import Nudge from "../components/Nudge"
-import { PanicPanel, TimerPanel, elapsedSeconds } from "../components/Panels"
+import { PanicPanel, TimerChip, TimerPanel, elapsedSeconds } from "../components/Panels"
 import Reveal from "../components/Reveal"
 import { CaseSkeleton } from "../components/Skeletons"
 import { refuseLines } from "../content"
-import { useNudge } from "../hooks"
+import { useCompact, useNudge } from "../hooks"
 import { applyClick, collectMarks, countAllTicks, placeTick, removeMarks } from "../logic"
 import { describeCell, emptyStats, printSheet } from "../report"
 import { clearSave, loadSave, writeSave } from "../storage"
@@ -51,6 +52,7 @@ export default function Case() {
   const [finalSeconds, setFinalSeconds] = useState(0)
   const [verdict, setVerdict] = useState(NO_VERDICT)
   const latest = useRef(null)
+  const compact = useCompact()
 
   useEffect(() => {
     let alive = true
@@ -383,28 +385,32 @@ export default function Case() {
   }
 
   return (
-    <div className="case">
+    <div className={compact ? "case compact" : "case"}>
       <header className="topbar">
         <Link className="back" to="/">
           Case file
         </Link>
         <h1 className="case-title">The Grange Display Case</h1>
-        <div className="actions">
-          <button type="button" className="ghost" onClick={undo} disabled={!history.length}>
-            Undo
-          </button>
-          <button type="button" className="ghost" onClick={redo} disabled={!future.length}>
-            Redo
-          </button>
-          <button type="button" className="ghost" onClick={() => setElder({ mode: "confirm" })} disabled={!puzzle}>
-            Ask the Elder
-          </button>
-          <button type="button" className={armed ? "ghost armed" : "ghost"} onClick={startOver}>
-            {armed ? "Really clear it all?" : "Start over"}
-          </button>
-        </div>
+        {compact ? (
+          <TimerChip startedAt={startedAt} frozenAt={frozenAt} penalty={penalty} />
+        ) : (
+          <div className="actions">
+            <button type="button" className="ghost" onClick={undo} disabled={!history.length}>
+              Undo
+            </button>
+            <button type="button" className="ghost" onClick={redo} disabled={!future.length}>
+              Redo
+            </button>
+            <button type="button" className="ghost" onClick={() => setElder({ mode: "confirm" })} disabled={!puzzle}>
+              Ask the Elder
+            </button>
+            <button type="button" className={armed ? "ghost armed" : "ghost"} onClick={startOver}>
+              {armed ? "Really clear it all?" : "Start over"}
+            </button>
+          </div>
+        )}
       </header>
-      <div className="strip">
+      {!compact && <div className="strip">
         <span className="swatch no">
           <Mark kind="no" />
         </span>
@@ -429,7 +435,7 @@ export default function Case() {
             Print sheet
           </button>
         </div>
-      </div>
+      </div>}
       {full && puzzle && !scene && (
         <div className="accuse-bar">
           <p>Every block is full. Mayor Lewis has noticed and is trying very hard to look casual.</p>
@@ -462,7 +468,61 @@ export default function Case() {
       )}
       {error && <p className="status">The case file did not load. Is the backend running?</p>}
       {!error && !puzzle && <CaseSkeleton />}
-      {puzzle && (
+      {puzzle && compact && (
+        <div className="workspace">
+          <MobileWorkspace
+            puzzle={puzzle}
+            cells={cells}
+            notes={notes}
+            pencil={pencil}
+            onPencil={() => setPencil((prev) => !prev)}
+            focus={focus}
+            onFocus={toggleFocus}
+            outlined={outlined}
+            onCell={onCell}
+            onNote={toggleNote}
+            checked={checked}
+            onToggleClue={toggleClue}
+            onUndo={undo}
+            canUndo={history.length > 0}
+            onRedo={redo}
+            canRedo={future.length > 0}
+            menu={(close) => (
+              <div className="m-menu">
+                <HowTo />
+                <div className="m-menu-list">
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => {
+                      close()
+                      setElder({ mode: "confirm" })
+                    }}
+                  >
+                    Ask the Elder
+                  </button>
+                  <button type="button" className="ghost" onClick={() => printSheet(puzzle, cells)}>
+                    Print sheet
+                  </button>
+                  <button
+                    type="button"
+                    className={armed ? "ghost armed" : "ghost"}
+                    onClick={() => {
+                      if (armed) close()
+                      startOver()
+                    }}
+                  >
+                    {armed ? "Really clear it all?" : "Start over"}
+                  </button>
+                </div>
+                <TimerPanel startedAt={startedAt} frozenAt={frozenAt} penalty={penalty} />
+                <PanicPanel ticks={ticks} total={MAX_TICKS} />
+              </div>
+            )}
+          />
+        </div>
+      )}
+      {puzzle && !compact && (
         <div className="workspace">
           <div className="sheet-scroll">
             <LogicSheet

@@ -26,6 +26,26 @@ export function unpackCells(packed) {
   return cells
 }
 
+export function mergeTouched(current, delta) {
+  const next = { ...current }
+  for (const [key, no, at] of delta) {
+    if (key === "*") {
+      for (const old of Object.keys(next)) {
+        if (next[old][1] <= at) delete next[old]
+      }
+    } else if (!next[key] || next[key][1] <= at) next[key] = [no, at]
+  }
+  return next
+}
+
+export function agoText(seconds) {
+  if (seconds < 45) return "just now"
+  const minutes = Math.round(seconds / 60)
+  if (minutes < 60) return `${minutes} min ago`
+  const hours = Math.round(minutes / 60)
+  return `${hours} hr ago`
+}
+
 export function noteInk(notes, members) {
   const colors = Object.fromEntries((members ?? []).map((member) => [member.id, member.color]))
   const ink = {}
@@ -34,14 +54,21 @@ export function noteInk(notes, members) {
 }
 
 async function call(path, { method = "GET", token, body } = {}) {
-  const res = await fetch(apiUrl(path), {
-    method,
-    headers: {
-      ...(body ? { "Content-Type": "application/json" } : {}),
-      ...(token ? { "x-table-token": token } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  })
+  let res
+  try {
+    res = await fetch(apiUrl(path), {
+      method,
+      headers: {
+        ...(body ? { "Content-Type": "application/json" } : {}),
+        ...(token ? { "x-table-token": token } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    })
+  } catch {
+    const error = new Error("offline")
+    error.status = 0
+    throw error
+  }
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
     const error = new Error(data.error || "request")

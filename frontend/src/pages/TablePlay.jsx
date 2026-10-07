@@ -1,25 +1,30 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import Pusher from "pusher-js"
+import ActivityStrip, { ActivityList } from "../components/ActivityStrip"
 import ClueList from "../components/ClueList"
 import Doubt from "../components/Doubt"
 import { ElderConfirm, ElderResult } from "../components/Elder"
 import LogicSheet from "../components/LogicSheet"
 import Mark from "../components/Mark"
+import MobileWorkspace, { HowTo } from "../components/MobileWorkspace"
+import Modal from "../components/Modal"
 import Nudge from "../components/Nudge"
-import { PanicPanel, TimerPanel } from "../components/Panels"
+import { PanicPanel, TimerChip, TimerPanel } from "../components/Panels"
 import Reveal from "../components/Reveal"
 import { CaseSkeleton } from "../components/Skeletons"
 import TableForm from "../components/TableForm"
 import { apiUrl } from "../api"
-import { useNudge } from "../hooks"
+import { useCompact, useNudge } from "../hooks"
 import { copyText } from "../report"
-import { act, clearSeat, leaveTable, loadSeat, loadTable, noteInk, pingTable, unpackCells } from "../table"
+import { act, agoText, clearSeat, leaveTable, loadSeat, loadTable, mergeTouched, noteInk, pingTable, unpackCells } from "../table"
 
 const Lineup = lazy(() => import("../components/Lineup"))
 const Celebration = lazy(() => import("../components/Celebration"))
 
 const MAX_TICKS = 30
+const IDLE_WARN_MS = 5 * 60 * 1000
+const IDLE_KICK_MS = 2 * 60 * 1000
 
 function problem(error) {
   if (error === "slow") return "The table is rate limiting you. Wait a minute."
@@ -42,7 +47,20 @@ export default function TablePlay() {
   const [toastOff, setToastOff] = useState(0)
   const [error, setError] = useState("")
   const [copied, setCopied] = useState(null)
+  const [boot, setBoot] = useState("loading")
+  const [retry, setRetry] = useState(0)
+  const [peer, setPeer] = useState(null)
+  const [pulse, setPulse] = useState(null)
+  const [idleWarn, setIdleWarn] = useState(false)
+  const [touched, setTouched] = useState({})
+  const [roster, setRoster] = useState({})
+  const [skew, setSkew] = useState(0)
   const seen = useRef(0)
+  const seenNotice = useRef(0)
+  const lastActive = useRef(Date.now())
+  const warnedAt = useRef(null)
+  const kicking = useRef(false)
+  const compact = useCompact()
 
   const take = useCallback((next) => {
     if (!next) return
@@ -55,8 +73,14 @@ export default function TablePlay() {
       if (current) loadTable(code, current.token).then((data) => take(data)).catch(() => {})
       return
     }
-    if (typeof next.rev === "number" && next.rev < seen.current) return
+    const stale = typeof next.rev === "number" && next.rev < seen.current
+    if (stale && next.touchDelta?.length) setTouched((prev) => mergeTouched(prev, next.touchDelta))
+    if (stale) return
     if (typeof next.rev === "number") seen.current = next.rev
+    if (next.touched) setTouched(next.touched)
+    else if (next.touchDelta?.length) setTouched((prev) => mergeTouched(prev, next.touchDelta))
+    if (next.roster) setRoster(next.roster)
+    if (next.serverNow) setSkew(next.serverNow * 1000 - Date.now())
     setTable((prev) => ({
       ...next,
       me: next.me || prev?.me,
@@ -80,12 +104,17 @@ export default function TablePlay() {
 
   useEffect(() => {
     const current = loadSeat(code)
-    if (!current) return undefined
+    if (!current) {
+      setBoot("idle")
+      return undefined
+    }
     let pusher
     let stop = false
+    setBoot("loading")
     loadTable(code, current.token)
       .then((data) => {
         if (stop) return
+        setBoot("ready")
         take(data)
         if (!data.pusherKey) {
           setLive(false)
@@ -108,17 +137,34 @@ export default function TablePlay() {
           clearSeat(code)
           setSeat(null)
           setGone(err.status === 404)
+          setBoot("idle")
+          return
+        }
+        setBoot("offline")
+      })
+    function wake() {
+      if (document.visibilityState !== "visible") return
+      loadTable(code, current.token).then((data) => take(data)).catch(() => {})
+    }
+    document.addEventListener("visibilitychange", wake)
+    const ping = setInterval(() => {
+      pingTable(code, current.token).catch((err) => {
+        if (err.status === 401 || err.status === 404) {
+          clearSeat(code)
+          setSeat(null)
+          setGone(err.status === 404)
+        } else if (err.message === "offline" || err.status === 0) {
+          setBoot("offline")
         }
       })
-    const ping = setInterval(() => {
-      pingTable(code, current.token).catch(() => {})
     }, 20000)
     return () => {
       stop = true
+      document.removeEventListener("visibilitychange", wake)
       clearInterval(ping)
       pusher?.disconnect()
     }
-  }, [code, seat, take])
+  }, [code, seat, take, retry])
 
   useEffect(() => {
     function onKey(event) {
@@ -141,8 +187,23 @@ export default function TablePlay() {
   const [nudgeLine, dismissNudge] = useNudge({
     startedAt: table?.startedAt ?? 0,
     active: Boolean(table) && table.scene !== "solved",
-    quiet: Boolean(table?.scene || table?.elder || table?.doubt || elderAsk),
+    quiet: Boolean(table?.scene || table?.elder || table?.doubt || elderAsk || idleWarn),
   })
+
+  useEffect(() => {
+    const notice = table?.notice
+    if (!notice?.at || notice.at === seenNotice.current) return undefined
+    seenNotice.current = notice.at
+    if (notice.byId === table.me) return undefined
+    setPeer(notice)
+    setPulse(notice.key ? { key: notice.key, color: notice.color } : null)
+    const hidePeer = setTimeout(() => setPeer(null), 2400)
+    const hidePulse = setTimeout(() => setPulse(null), 1900)
+    return () => {
+      clearTimeout(hidePeer)
+      clearTimeout(hidePulse)
+    }
+  }, [table?.notice, table?.me])
 
   async function op(body) {
     const current = loadSeat(code)
@@ -160,6 +221,22 @@ export default function TablePlay() {
     setTimeout(() => setCopied(null), 3500)
   }
 
+  async function shareLink() {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "The Grange Files",
+          text: `Sit at my table, code ${code}`,
+          url: `${window.location.origin}/case/${code}`,
+        })
+        return
+      } catch (err) {
+        if (err?.name === "AbortError") return
+      }
+    }
+    await copyLink()
+  }
+
   async function leave() {
     const current = loadSeat(code)
     if (current) await leaveTable(code, current.token).catch(() => {})
@@ -167,16 +244,90 @@ export default function TablePlay() {
     navigate("/")
   }
 
+  function staySeated() {
+    lastActive.current = Date.now()
+    warnedAt.current = null
+    setIdleWarn(false)
+  }
+
+  useEffect(() => {
+    if (!seat || !table || table.scene === "solved") return undefined
+    lastActive.current = Date.now()
+    warnedAt.current = null
+    setIdleWarn(false)
+    kicking.current = false
+
+    function bump() {
+      lastActive.current = Date.now()
+      if (warnedAt.current) {
+        warnedAt.current = null
+        setIdleWarn(false)
+      }
+    }
+
+    const events = ["pointerdown", "keydown", "touchstart"]
+    for (const name of events) window.addEventListener(name, bump)
+    const tick = setInterval(() => {
+      if (kicking.current) return
+      const now = Date.now()
+      if (!warnedAt.current && now - lastActive.current >= IDLE_WARN_MS) {
+        warnedAt.current = now
+        setIdleWarn(true)
+        return
+      }
+      if (warnedAt.current && now - warnedAt.current >= IDLE_KICK_MS) {
+        kicking.current = true
+        leave()
+      }
+    }, 5000)
+    return () => {
+      for (const name of events) window.removeEventListener(name, bump)
+      clearInterval(tick)
+    }
+  }, [seat, table?.scene, code])
+
   if (!CODE_RE_SAFE(code)) return <p className="status">That table code is not one of ours.</p>
   if (!seat) {
     return (
       <div className="case">
-        {gone && <p className="status">That table was cleared 15 minutes after the last person left.</p>}
+        {gone && <p className="status">That table was cleared. Ask the host for a new link.</p>}
         <TableForm mode="join" fixedCode={code} onCancel={() => navigate("/")} onSeated={() => setSeat(loadSeat(code))} />
       </div>
     )
   }
-  if (!table || !puzzle) return <CaseSkeleton />
+  if (boot === "offline") {
+    return (
+      <div className="case">
+        <p className="status">
+          Cannot reach the table server. Start the backend (`npm run dev` in `backend`), then{" "}
+          <button type="button" className="text-link" onClick={() => setRetry((n) => n + 1)}>
+            try again
+          </button>
+          .
+        </p>
+        <p className="status">
+          <button type="button" className="ghost small" onClick={() => navigate("/")}>
+            Back home
+          </button>
+        </p>
+      </div>
+    )
+  }
+  if (!table || !puzzle || boot === "loading") return <CaseSkeleton />
+
+  function trace(key) {
+    const stamp = touched[key]
+    if (!stamp) return null
+    const [no, at] = stamp
+    if (no === 0) return null
+    const age = Math.max(0, (Date.now() + skew) / 1000 - at)
+    if (no === -1) return { who: "The Elder", color: null, ago: agoText(age) }
+    const here = table.members.find((member) => member.no === no)
+    const past = roster[no]
+    if (!here && !past) return null
+    const name = here ? (here.id === table.me ? "You" : here.name) : `${past.name} (left)`
+    return { who: name, color: (here ?? past).color, ago: agoText(age) }
+  }
 
   const cells = unpackCells(table.cells)
   const ticks = Object.values(table.cells).filter((value) => value === 1).length
@@ -199,13 +350,14 @@ export default function TablePlay() {
       : ""
 
   return (
-    <div className="case">
+    <div className={compact ? "case compact" : "case"}>
       <header className="topbar">
         <Link className="back" to="/">
           Case file
         </Link>
         <h1 className="case-title">Table {table.code}</h1>
-        <div className="actions">
+        {compact && <TimerChip startedAt={table.startedAt} frozenAt={table.frozenAt} penalty={table.penalty} />}
+        {!compact && <div className="actions">
           <button type="button" className="ghost" onClick={() => op({ type: "undo" })} disabled={!table.canUndo}>
             Undo
           </button>
@@ -221,24 +373,33 @@ export default function TablePlay() {
           <button type="button" className="ghost" onClick={leave}>
             Leave
           </button>
-        </div>
+        </div>}
       </header>
       <ul className="seated">
         {table.members.map((member) => (
-          <li key={member.id} style={{ borderColor: member.color }}>
+          <li key={member.id} className={peer?.byId === member.id ? "seat on" : "seat"} style={{ "--seat": member.color }}>
+            <i className="seat-dot" aria-hidden="true" />
             {member.name}
             {member.id === table.me ? " (you)" : ""}
+            {peer?.byId === member.id && (
+              <span className="seat-did" role="status">
+                {peer.text.replace(`${peer.by} `, "")}
+              </span>
+            )}
           </li>
         ))}
         {!live && <li className="seat-warn">Live updates are off. Refresh to see the others.</li>}
-        <li className="copy-link">
-          <span role="status">{copied === "yes" ? "Link copied" : copied === "no" ? "Copy blocked. Share the code instead." : ""}</span>
-          <button type="button" className="ghost small" onClick={copyLink}>
-            Copy table link
-          </button>
-        </li>
+        {!compact && (
+          <li className="copy-link">
+            <span role="status">{copied === "yes" ? "Link copied" : copied === "no" ? "Copy blocked. Share the code instead." : ""}</span>
+            <ActivityStrip log={table.log} members={table.members} me={table.me} />
+            <button type="button" className="ghost small" onClick={copyLink}>
+              Copy table link
+            </button>
+          </li>
+        )}
       </ul>
-      <div className="strip">
+      {!compact && <div className="strip">
         <span className="swatch no"><Mark kind="no" /></span>
         <p>One click crosses a cell.</p>
         <span className="swatch yes"><Mark kind="yes" /></span>
@@ -248,7 +409,7 @@ export default function TablePlay() {
             {pencil ? "Pencil on" : "Pencil"}
           </button>
         </div>
-      </div>
+      </div>}
       {ticks === MAX_TICKS && !table.scene && (
         <div className="accuse-bar">
           <p>Every block is full. The whole table has to agree before Mayor Lewis opens the envelope.</p>
@@ -276,7 +437,71 @@ export default function TablePlay() {
       {nudgeLine && !table.scene && !elderAsk && !table.elder && (
         <Nudge line={nudgeLine} onDismiss={dismissNudge} onAsk={() => { dismissNudge(); setElderAsk(true) }} />
       )}
-      <div className="workspace">
+      {compact && (
+        <div className="workspace">
+          <MobileWorkspace
+            puzzle={puzzle}
+            cells={cells}
+            notes={noteInk(table.notes, table.members)}
+            pencil={pencil}
+            onPencil={() => setPencil((prev) => !prev)}
+            focus={focus}
+            onFocus={(value) => setFocus((prev) => (prev === value ? null : value))}
+            outlined={[...(table.toast?.blockers ?? []), ...table.spotlight]}
+            pulse={pulse}
+            trace={trace}
+            onCell={(grid, r, c) => op(pencil ? { type: "note", key: `${grid.id}:${r}:${c}` } : { type: "click", gridId: grid.id, r, c })}
+            onNote={(key) => op({ type: "note", key })}
+            checked={table.checked}
+            onToggleClue={(index) => op({ type: "clue", index })}
+            onUndo={() => op({ type: "undo" })}
+            canUndo={table.canUndo}
+            onRedo={() => op({ type: "redo" })}
+            canRedo={table.canRedo}
+            menu={(close) => (
+              <div className="m-menu">
+                <HowTo />
+                <div className="m-menu-list">
+                  <button
+                    type="button"
+                    className="ghost"
+                    disabled={Boolean(table.scene)}
+                    onClick={() => {
+                      close()
+                      setElderAsk(true)
+                    }}
+                  >
+                    Ask the Elder
+                  </button>
+                  <button type="button" className="ghost" onClick={shareLink}>
+                    {navigator.share ? "Share table link" : "Copy table link"}
+                  </button>
+                  {copied && (
+                    <p className="copy-note" role="status">
+                      {copied === "yes" ? "Link copied." : "Copy blocked. Share the code instead."}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    className={armed ? "ghost armed" : "ghost"}
+                    onClick={() => (armed ? op({ type: "start" }).then(() => { setArmed(false); close() }) : setArmed(true))}
+                  >
+                    {armed ? "Really clear it all?" : "Start over"}
+                  </button>
+                  <button type="button" className="ghost" onClick={leave}>
+                    Leave the table
+                  </button>
+                </div>
+                <h3 className="m-menu-head">Latest at the table</h3>
+                <ActivityList log={table.log} members={table.members} me={table.me} />
+                <TimerPanel startedAt={table.startedAt} frozenAt={table.frozenAt} penalty={table.penalty} />
+                <PanicPanel ticks={ticks} total={MAX_TICKS} />
+              </div>
+            )}
+          />
+        </div>
+      )}
+      {!compact && <div className="workspace">
         <div className="sheet-scroll">
           <LogicSheet
             columns={puzzle.columns}
@@ -286,6 +511,8 @@ export default function TablePlay() {
             pencil={pencil}
             focus={focus}
             outlined={[...(table.toast?.blockers ?? []), ...table.spotlight]}
+            pulse={pulse}
+            trace={trace}
             onCell={(grid, r, c) => op(pencil ? { type: "note", key: `${grid.id}:${r}:${c}` } : { type: "click", gridId: grid.id, r, c })}
             onNote={(key) => op({ type: "note", key })}
             timer={<TimerPanel startedAt={table.startedAt} frozenAt={table.frozenAt} penalty={table.penalty} />}
@@ -300,7 +527,21 @@ export default function TablePlay() {
           onToggle={(index) => op({ type: "clue", index })}
           onFocus={(value) => setFocus((prev) => (prev === value ? null : value))}
         />
-      </div>
+      </div>}
+      {idleWarn && (
+        <Modal
+          kicker="Still at the table?"
+          title="You have been quiet"
+          onClose={staySeated}
+          actions={
+            <button type="button" className="solid" onClick={staySeated} autoFocus>
+              I am still here
+            </button>
+          }
+        >
+          <p>Five minutes went by with no clicks or keys. Say you are still here, or your seat will free up in two minutes so someone else can sit.</p>
+        </Modal>
+      )}
       {elderAsk && <ElderConfirm onCancel={() => setElderAsk(false)} onConfirm={() => { setElderAsk(false); op({ type: "hint" }) }} />}
       {table.elder && <ElderResult ui={{ mode: "result", result: table.elder.result, seed: table.rev }} onClose={() => op({ type: "elderClose" })} />}
       <Suspense fallback={null}>

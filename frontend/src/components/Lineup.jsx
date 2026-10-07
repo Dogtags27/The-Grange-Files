@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { fill, pickOne } from "../api"
 import { accuseLines } from "../content"
+import { useCompact } from "../hooks"
 import Figure from "./Figure"
 
 const marks = [
@@ -25,6 +26,7 @@ function Circle() {
 }
 
 export default function Lineup({ suspects, onBack, onPresent, ballots, onPick, presentText, presentOff, note }) {
+  const compact = useCompact()
   const [pick, setPick] = useState(null)
   const [line, setLine] = useState("")
   const shared = Array.isArray(ballots)
@@ -64,8 +66,8 @@ export default function Lineup({ suspects, onBack, onPresent, ballots, onPick, p
         <p className="file">The lineup</p>
         <h2>Who did it?</h2>
         <p className="scene-sub">
-          Click a suspect to circle them, or use the arrow keys. You can change your mind until you present your
-          answer.
+          {compact ? "Tap a suspect to circle them." : "Click a suspect to circle them, or use the arrow keys."} You can
+          change your mind until you present your answer.
         </p>
         <div className="wall">
           <div className="floor" />

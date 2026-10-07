@@ -6,6 +6,7 @@ import {
   MAX_SEATS,
   SEAT_STALE_MS,
   applyOp,
+  broadcastBody,
   createRoom,
   joinRoom,
   leave,
@@ -29,9 +30,30 @@ test("a table seats five, shares a click, and undoes it", () => {
   const clicked = applyOp(guest.token, host.code, { type: "click", gridId: "alibis__suspects", r: 0, c: 0 })
   assert.equal(clicked.status, 200)
   assert.equal(snapshot(host.token, host.code).cells["alibis__suspects:0:0"], 0)
+  assert.equal(clicked.view.notice.kind, "cross")
+  assert.equal(clicked.view.notice.by, "Grace")
+  assert.match(clicked.view.log.at(-1).text, /Grace crossed/)
   const undone = applyOp(host.token, host.code, { type: "undo" })
   assert.equal(undone.view.cells["alibis__suspects:0:0"], undefined)
   assert.equal(snapshot(guest.token, host.code).canRedo, true)
+  assert.match(undone.view.log.at(-1).text, /Ada undid a mark/)
+})
+
+test("each cell remembers who last changed it, and live updates carry only the change", () => {
+  const host = seat(createRoom("Ada"))
+  const guest = seat(joinRoom(host.code, "Grace"))
+  const first = applyOp(host.token, host.code, { type: "click", gridId: "alibis__suspects", r: 0, c: 0 })
+  const hostNo = first.view.members.find((member) => member.id === host.id).no
+  const guestNo = first.view.members.find((member) => member.id === guest.id).no
+  assert.equal(first.view.touched["alibis__suspects:0:0"][0], hostNo)
+  const second = applyOp(guest.token, host.code, { type: "click", gridId: "alibis__suspects", r: 0, c: 0 })
+  assert.equal(second.view.touched["alibis__suspects:0:0"][0], guestNo)
+  const body = broadcastBody(second.room)
+  assert.equal(body.touched, undefined)
+  assert.ok(body.touchDelta.some(([key, no]) => key === "alibis__suspects:0:0" && no === guestNo))
+  const cleared = applyOp(host.token, host.code, { type: "start" })
+  assert.deepEqual(cleared.view.touched, {})
+  assert.equal(broadcastBody(cleared.room).touchDelta[0][0], "*")
 })
 
 test("the lineup stays shut until the sheet is right", () => {

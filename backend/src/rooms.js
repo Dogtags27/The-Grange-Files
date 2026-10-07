@@ -8,10 +8,10 @@ import { culpritDetails, culpritName, fullSolution, isSolved, suspectNames } fro
 export const MAX_SEATS = 5
 export const MAX_ROOMS = 40
 export const EMPTY_TTL_MS = 15 * 60 * 1000
-export const SEAT_STALE_MS = 50 * 1000
+export const SEAT_STALE_MS = 8 * 60 * 1000
 export const REVEAL_MS = 22 * 1000
 const CODE_RE = /^[a-z]{3,5}-[a-z]{3,5}$/
-const COLORS = ["#6b3a2e", "#3f4a3a", "#8a5a2a", "#4a5a6b", "#5c3a4a"]
+const COLORS = ["#3d6cb5", "#c36a22", "#7a4fad", "#2f8a8f", "#a8457a"]
 const WORDS = ["hay", "pie", "goat", "mine", "fair", "cola", "dock", "barn", "lamp", "crow", "plum", "moss", "rust", "kiln", "reed", "pond", "cart", "wool", "pear", "salt", "mill", "coop", "gate", "vine", "cork", "loaf", "pail", "well", "boot", "drum"]
 const REFUSALS = [
   "I cannot call a lineup on that sheet. One of those ticks is lying to us.",
@@ -43,6 +43,10 @@ function blank(code) {
     finalSeconds: 0,
     penalty: 0,
     cells: {},
+    touched: {},
+    delta: [],
+    roster: {},
+    nextNo: 0,
     notes: {},
     checked: {},
     history: [],
@@ -56,11 +60,12 @@ function blank(code) {
     pendingDoubt: null,
     spotlight: [],
     toast: null,
+    notice: null,
     elder: null,
     accused: null,
     verdict: null,
     stats: blankStats(),
-    log: [{ t: 0, p: 0, kind: "start", text: "Opened a table", by: "" }],
+    log: [{ t: 0, p: 0, kind: "start", text: "Opened a table", by: "", byId: "" }],
   }
 }
 
@@ -85,13 +90,50 @@ function describe(key) {
   const [id, rs, cs] = String(key).split(":")
   const grid = grids.get(id)
   if (!grid) return "a cell"
-  return `${label(grid.rowValues[Number(rs)])} with ${label(grid.colValues[Number(cs)])}`
+  return `${label(grid.rowValues[Number(rs)])} × ${label(grid.colValues[Number(cs)])}`
 }
 
-function record(room, member, kind, text) {
+function record(room, member, kind, text, extra = {}) {
   const t = Math.max(0, Math.floor((Date.now() - room.startedAt) / 1000))
-  room.log.push({ t, p: room.penalty, kind, text, by: member?.name ?? "" })
+  room.log.push({
+    t,
+    p: room.penalty,
+    kind,
+    text,
+    by: member?.name ?? "",
+    byId: member?.id ?? "",
+    key: extra.key ?? null,
+  })
   if (room.log.length > 400) room.log.shift()
+}
+
+function tell(room, member, kind, key, text) {
+  room.notice = {
+    byId: member.id,
+    by: member.name,
+    color: member.color,
+    kind,
+    key: key ?? null,
+    text,
+  }
+}
+
+function stamp(room, before, who) {
+  const t = Math.floor(Date.now() / 1000)
+  const no = who ? who.no : -1
+  const after = room.cells
+  for (const key in after) {
+    if (before[key]?.mark !== after[key].mark) {
+      room.touched[key] = [no, t]
+      room.delta.push([key, no, t])
+    }
+  }
+  for (const key in before) {
+    if (!after[key]) {
+      delete room.touched[key]
+      room.delta.push([key, 0, t])
+    }
+  }
 }
 
 function remember(room) {
@@ -112,13 +154,17 @@ export function view(room, memberId) {
     cells: Object.fromEntries(Object.entries(room.cells).map(([key, value]) => [key, value.mark === "yes" ? 1 : 0])),
     notes: room.notes,
     checked: room.checked,
-    members: [...room.members.values()].map(({ id, name, color }) => ({ id, name, color })),
+    members: [...room.members.values()].map(({ id, no, name, color }) => ({ id, no, name, color })),
+    touched: room.touched,
+    roster: room.roster,
+    serverNow: Math.floor(Date.now() / 1000),
     scene: room.scene,
     votes: room.votes,
     split: room.split,
     doubt: room.doubt,
     spotlight: room.spotlight,
     toast: room.toast,
+    notice: room.notice,
     elder: room.elder,
     accused: room.accused,
     verdict: room.verdict,
@@ -135,6 +181,9 @@ export function broadcastBody(room) {
   const body = view(room, null)
   delete body.pusherKey
   delete body.cluster
+  delete body.touched
+  delete body.roster
+  body.touchDelta = room.delta
   return JSON.stringify(body).length > 9000 ? { rev: room.rev, refetch: true } : body
 }
 
@@ -152,13 +201,16 @@ function sit(room, name) {
   if (room.members.size >= MAX_SEATS) return null
   const taken = new Set([...room.members.values()].map((member) => member.color))
   const color = COLORS.find((item) => !taken.has(item)) ?? COLORS[0]
+  room.nextNo += 1
   const member = {
     id: crypto.randomBytes(6).toString("hex"),
+    no: room.nextNo,
     name,
     color,
     token: crypto.randomBytes(18).toString("base64url"),
     seen: Date.now(),
   }
+  room.roster[member.no] = { name, color }
   room.members.set(member.id, member)
   byToken.set(member.token, { code: room.code, id: member.id })
   room.emptySince = null
@@ -288,6 +340,7 @@ export function applyOp(token, code, op) {
   if (!link) return fail(401, "seat")
   const { room, member } = link
   const type = op?.type
+  room.delta = []
   if (type === "click") {
     const grid = grids.get(op.gridId)
     const r = op.r
@@ -299,24 +352,34 @@ export function applyOp(token, code, op) {
     const result = applyClick(room.cells, grid.id, r, c, 5, grid.rowValues, grid.colValues)
     if (result.state !== room.cells) {
       remember(room)
+      const prior = room.cells
       room.cells = result.state
+      stamp(room, prior, member)
       const after = room.cells[key]?.mark
       room.stats.clicks += 1
-      if (after === "no" && before !== "no") room.stats.crosses += 1
-      if (after === "yes") {
+      if (after === "no" && before !== "no") {
+        room.stats.crosses += 1
+        record(room, member, "cross", `${member.name} crossed ${describe(key)}`, { key })
+        tell(room, member, "cross", key, `${member.name} put a cross`)
+      } else if (after === "yes") {
         room.stats.ticks += 1
-        record(room, member, "tick", `${member.name} ticked ${describe(key)}`)
-      }
-      if (before === "yes" && !after) {
+        record(room, member, "tick", `${member.name} ticked ${describe(key)}`, { key })
+        tell(room, member, "tick", key, `${member.name} put a tick`)
+      } else if (before === "yes" && !after) {
         room.stats.clears += 1
-        record(room, member, "untick", `${member.name} took back ${describe(key)}`)
+        record(room, member, "untick", `${member.name} cleared a tick on ${describe(key)}`, { key })
+        tell(room, member, "clear", key, `${member.name} cleared a tick`)
       }
-    } else room.stats.blocked += 1
+    } else {
+      room.stats.blocked += 1
+      room.notice = null
+    }
     room.toast = result.toast ? { text: result.toast, blockers: result.blockers } : null
     room.spotlight = result.blockers ?? []
     room.doubt = null
   } else if (type === "note") {
     if (typeof op.key !== "string" || !grids.has(op.key.split(":")[0])) return fail(400, "cell")
+    room.notice = null
     if (room.notes[op.key] === member.id) delete room.notes[op.key]
     else {
       room.notes[op.key] = member.id
@@ -327,32 +390,41 @@ export function applyOp(token, code, op) {
     const from = type === "undo" ? room.history : room.future
     const to = type === "undo" ? room.future : room.history
     if (!from.length) return { status: 200, view: view(room, member.id), room }
+    const prior = room.cells
     to.push(room.cells)
     room.cells = from.pop()
+    stamp(room, prior, member)
     room.stats[type === "undo" ? "undos" : "redos"] += 1
-    record(room, member, type, `${member.name} used ${type}`)
+    const line = type === "undo" ? `${member.name} undid a mark` : `${member.name} redid a mark`
+    record(room, member, type, line)
+    tell(room, member, type, null, line)
   } else if (type === "clue") {
     const index = op.index
     if (!Number.isInteger(index) || index < 0 || index >= puzzle.clues.length) return fail(400, "clue")
+    room.notice = null
     room.checked[index] = !room.checked[index]
   } else if (type === "hint") {
     if (room.scene) return fail(409, "scene")
     const marks = collectMarks(room.cells)
     const result = evaluateHint(marks.ticks, marks.crosses)
+    const prior = room.cells
     if (result.kind === "cleanup") room.cells = removeMarks(room.cells, result.wrongTicks, result.wrongCrosses)
     if (result.kind === "step") room.cells = placeTick(room.cells, result.key)
+    stamp(room, prior, null)
     room.history = []
     room.future = []
     room.spotlight = result.kind === "step" ? [result.key] : []
     room.elder = { result }
+    room.notice = null
     if (result.penalty > 0) {
       room.penalty += result.penalty
       room.stats.elder += 1
       const what = result.kind === "cleanup" ? "had mistakes wiped" : `heard: ${result.title}`
-      record(room, member, "elder", `${member.name} asked the Elder and ${what} (+${result.penalty} min)`, )
+      record(room, member, "elder", `${member.name} asked the Elder and ${what} (+${result.penalty} min)`)
     }
   } else if (type === "check") {
     if (room.scene) return fail(409, "scene")
+    room.notice = null
     const ticks = collectMarks(room.cells).ticks
     if (isSolved(ticks)) {
       room.scene = "lineup"
@@ -388,7 +460,9 @@ export function applyOp(token, code, op) {
     if (!room.doubt) return fail(409, "doubt")
     remember(room)
     record(room, member, "doubtCleared", `${member.name} cleared ${describe(room.doubt.key)}`)
+    const prior = room.cells
     room.cells = removeMarks(room.cells, [room.doubt.key], [])
+    stamp(room, prior, member)
     room.doubt = null
     room.spotlight = []
   } else if (type === "doubtKeep") {
@@ -406,9 +480,12 @@ export function applyOp(token, code, op) {
     fresh.createdAt = room.createdAt
     record(fresh, member, "start", `${member.name} cleared the sheet`)
     const rev = room.rev
-    Object.assign(room, fresh, { members: room.members, log: fresh.log, rev })
+    const { nextNo, roster } = room
+    Object.assign(room, fresh, { members: room.members, log: fresh.log, rev, nextNo, roster })
+    room.delta = [["*", 0, Math.floor(Date.now() / 1000)]]
   } else return fail(400, "op")
   room.rev += 1
+  if (room.notice) room.notice = { ...room.notice, at: room.rev }
   return { status: 200, view: view(room, member.id), room }
 }
 

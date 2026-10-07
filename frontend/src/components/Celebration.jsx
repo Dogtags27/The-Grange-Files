@@ -55,10 +55,10 @@ export default function Celebration({ result, puzzle, cells, seconds, penalty, s
             <tbody>
               {solution.map((row) => (
                 <tr key={row.suspect} className={row.suspect === culprit.suspect ? "culprit" : undefined}>
-                  <td>{row.suspect}</td>
-                  <td>{row.location}</td>
-                  <td>{row.item}</td>
-                  <td>{row.alibi}</td>
+                  <td data-label="Suspect">{row.suspect}</td>
+                  <td data-label="Location">{row.location}</td>
+                  <td data-label="Item">{row.item}</td>
+                  <td data-label="Alibi">{row.alibi}</td>
                 </tr>
               ))}
             </tbody>

@@ -5,6 +5,15 @@ export function elapsedSeconds(startedAt, frozenAt, penalty, now) {
   return Math.max(0, Math.floor(((frozenAt ?? now) - startedAt) / 1000)) + penalty * 60
 }
 
+export function TimerChip({ startedAt, frozenAt, penalty }) {
+  const now = useNow()
+  return (
+    <span className="time-chip" role="timer" aria-label="Time on the case">
+      {clock(elapsedSeconds(startedAt, frozenAt, penalty, now))}
+    </span>
+  )
+}
+
 export function TimerPanel({ startedAt, frozenAt, penalty }) {
   const now = useNow()
   const seconds = elapsedSeconds(startedAt, frozenAt, penalty, now)

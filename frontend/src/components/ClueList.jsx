@@ -1,12 +1,46 @@
-import { useMemo } from "react"
-import { splitClue } from "../logic"
+import { useEffect, useRef } from "react"
+import { useParsedClues } from "../hooks"
 
-export default function ClueList({ clues, values, checked, focus, onToggle, onFocus }) {
-  const parsed = useMemo(() => clues.map((clue) => splitClue(clue, values)), [clues, values])
+export function ClueText({ parts, focus, onFocus }) {
+  return parts.map((part, i) =>
+    part.value ? (
+      <span
+        key={i}
+        role="button"
+        tabIndex={0}
+        className={focus === part.value ? "term on" : "term"}
+        aria-pressed={focus === part.value}
+        onClick={(event) => {
+          event.stopPropagation()
+          onFocus(part.value)
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault()
+            event.stopPropagation()
+            onFocus(part.value)
+          }
+        }}
+      >
+        {part.text}
+      </span>
+    ) : (
+      <span key={i}>{part.text}</span>
+    ),
+  )
+}
+
+export default function ClueList({ clues, values, checked, focus, onToggle, onFocus, current, tip, sheet }) {
+  const parsed = useParsedClues(clues, values)
   const done = clues.filter((_, index) => checked[index]).length
+  const now = useRef(null)
+
+  useEffect(() => {
+    now.current?.scrollIntoView({ block: "center" })
+  }, [])
 
   return (
-    <aside className="clues">
+    <aside className={sheet ? "clues in-sheet" : "clues"}>
       <div className="clues-head">
         <div className="clues-title">
           <h2>Clues</h2>
@@ -24,14 +58,17 @@ export default function ClueList({ clues, values, checked, focus, onToggle, onFo
           <i style={{ width: `${(done / clues.length) * 100}%` }} />
         </div>
         <p className="tip">
-          Names with a dashed line are live. Press one to light it up on the grid
-          and in every clue.
+          {tip ?? "Names with a dashed line are live. Press one to light it up on the grid and in every clue."}
         </p>
       </div>
       <div className="clue-scroll">
         <ol>
           {parsed.map((parts, index) => (
-            <li key={clues[index]} className={checked[index] ? "clue used" : "clue"}>
+            <li
+              key={clues[index]}
+              ref={index === current ? now : undefined}
+              className={`${checked[index] ? "clue used" : "clue"}${index === current ? " now" : ""}`}
+            >
               <input
                 type="checkbox"
                 checked={Boolean(checked[index])}
@@ -39,33 +76,7 @@ export default function ClueList({ clues, values, checked, focus, onToggle, onFo
                 aria-label={`Clue ${index + 1}, crossed off`}
               />
               <p onClick={() => onToggle(index)}>
-                <span className="num">{index + 1}.</span>{" "}
-                {parts.map((part, i) =>
-                  part.value ? (
-                    <span
-                      key={i}
-                      role="button"
-                      tabIndex={0}
-                      className={focus === part.value ? "term on" : "term"}
-                      aria-pressed={focus === part.value}
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        onFocus(part.value)
-                      }}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault()
-                          event.stopPropagation()
-                          onFocus(part.value)
-                        }
-                      }}
-                    >
-                      {part.text}
-                    </span>
-                  ) : (
-                    <span key={i}>{part.text}</span>
-                  ),
-                )}
+                <span className="num">{index + 1}.</span> <ClueText parts={parts} focus={focus} onFocus={onFocus} />
               </p>
             </li>
           ))}

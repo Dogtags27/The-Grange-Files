@@ -22,6 +22,8 @@ function Block({
   hover,
   setHover,
   outlined,
+  pulse,
+  trace,
   active,
   setActive,
   onCell,
@@ -47,6 +49,9 @@ function Block({
             if (ruled) classes.push("ruled")
             if (here && here.r === r && here.c === c) classes.push("aim")
             if (outlined.includes(key)) classes.push("blocker")
+            if (pulse?.key === key) classes.push("pulse")
+            const info = trace && mark !== "empty" && here && here.r === r && here.c === c ? trace(key) : null
+            if (info) classes.push("tracing")
             const pencilled = Boolean(notes[key])
             const ink = typeof notes[key] === "string" ? notes[key] : null
             const aim = { gridId: grid.id, bandId: band.row.id, colIndex: grid.colIndex, r, c }
@@ -56,6 +61,7 @@ function Block({
                 type="button"
                 data-key={key}
                 className={classes.join(" ")}
+                style={pulse?.key === key && pulse.color ? { "--pulse": pulse.color } : undefined}
                 aria-label={`${rowValue} and ${colValue}, ${spoken(mark)}${pencilled ? ", pencilled" : ""}`}
                 aria-pressed={mark === "yes"}
                 tabIndex={active === key ? 0 : -1}
@@ -76,6 +82,12 @@ function Block({
                 {pencilled && (
                   <i className="pencilmark" style={ink ? { borderColor: ink } : undefined} aria-hidden="true" />
                 )}
+                {info && (
+                  <span className={c >= 3 ? "trace end" : "trace"} role="tooltip">
+                    {info.color && <i className="seat-dot" style={{ "--seat": info.color }} aria-hidden="true" />}
+                    {info.who}, {info.ago}
+                  </span>
+                )}
               </button>
             )
           }),
@@ -92,6 +104,8 @@ export default function LogicSheet({
   cells,
   focus,
   outlined,
+  pulse,
+  trace,
   notes,
   pencil,
   onCell,
@@ -187,6 +201,8 @@ export default function LogicSheet({
                     hover={hover}
                     setHover={setHover}
                     outlined={outlined}
+                    pulse={pulse}
+                    trace={trace}
                     onCell={onCell}
                   />
                 )
