@@ -346,8 +346,8 @@ export default function TablePlay() {
   const splitNote = table.split
     ? `${Object.entries(table.split).map(([name, count]) => `${count} say ${name}`).join(". ")}.${tie ? " It's a tie, so someone has to switch." : " The bigger group can go ahead."}`
     : ballots.length
-      ? "Circle a suspect. The envelope opens when everyone agrees."
-      : ""
+      ? `${ballots.length} of ${table.members.length} circled. Timer ends early if everyone votes.`
+      : "Twenty seconds. Circle someone, or skip and let a teammate decide."
 
   return (
     <div className={compact ? "case compact" : "case"}>
@@ -412,7 +412,7 @@ export default function TablePlay() {
       </div>}
       {ticks === MAX_TICKS && !table.scene && (
         <div className="accuse-bar">
-          <p>Every block is full. The whole table has to agree before Mayor Lewis opens the envelope.</p>
+          <p>Every block is full. The lineup gives everyone twenty seconds to circle a suspect.</p>
           <button type="button" className="solid" onClick={() => op({ type: "check" })}>Name the culprit</button>
         </div>
       )}
@@ -553,8 +553,11 @@ export default function TablePlay() {
             onBack={() => op({ type: "back" })}
             onPresent={() => op({ type: "present" })}
             presentOff={!table.split || tie}
-            presentText={tie ? "It's a tie" : table.split ? "Present the majority" : "Waiting for the table"}
+            presentText={tie ? "It's a tie" : table.split ? "Present the majority" : "Waiting on the timer"}
             note={splitNote}
+            voteEndsAt={table.voteEndsAt}
+            skew={skew}
+            onVoteExpire={() => op({ type: "tally" })}
           />
         )}
         {table.scene === "solved" && table.verdict?.correct && (

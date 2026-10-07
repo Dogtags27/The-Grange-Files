@@ -15,7 +15,7 @@ import { refuseLines } from "../content"
 import { useCompact, useNudge } from "../hooks"
 import { applyClick, collectMarks, countAllTicks, placeTick, removeMarks } from "../logic"
 import { describeCell, emptyStats, printSheet } from "../report"
-import { clearSave, loadSave, writeSave } from "../storage"
+import { clearSave, hasProgress, loadSave, writeSave } from "../storage"
 
 const Lineup = lazy(() => import("../components/Lineup"))
 const Celebration = lazy(() => import("../components/Celebration"))
@@ -27,6 +27,7 @@ const openingEntry = { t: 0, p: 0, kind: "start", text: "Opened the case file" }
 
 export default function Case() {
   const [saved] = useState(loadSave)
+  const [resumeNote, setResumeNote] = useState(() => hasProgress(saved))
   const [puzzle, setPuzzle] = useState(null)
   const [error, setError] = useState(false)
   const [cells, setCells] = useState(saved?.cells ?? {})
@@ -381,6 +382,7 @@ export default function Case() {
     setLog([openingEntry])
     setFrozenAt(null)
     setArmed(false)
+    setResumeNote(false)
     setStartedAt(Date.now())
   }
 
@@ -436,6 +438,17 @@ export default function Case() {
           </button>
         </div>
       </div>}
+      {resumeNote && !scene && (
+        <div className="toast resume-toast" role="status">
+          <div>
+            <p className="toast-title">Picked up where you left off</p>
+            <p>This browser kept your solo sheet. Start over clears it.</p>
+          </div>
+          <button type="button" onClick={() => setResumeNote(false)}>
+            Close
+          </button>
+        </div>
+      )}
       {full && puzzle && !scene && (
         <div className="accuse-bar">
           <p>Every block is full. Mayor Lewis has noticed and is trying very hard to look casual.</p>

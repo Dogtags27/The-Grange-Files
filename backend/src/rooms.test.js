@@ -5,9 +5,11 @@ import {
   MAX_ROOMS,
   MAX_SEATS,
   SEAT_STALE_MS,
+  VOTE_MS,
   applyOp,
   broadcastBody,
   createRoom,
+  fillSolvedForTest,
   joinRoom,
   leave,
   peek,
@@ -15,6 +17,7 @@ import {
   snapshot,
   sweep,
 } from "./rooms.js"
+import { culpritName } from "./solution.js"
 
 test.beforeEach(() => resetRooms())
 
@@ -91,4 +94,41 @@ test("a quiet seat is dropped and the empty table is kept", () => {
   const left = peek(host.code)
   assert.ok(left)
   assert.equal(left.members.length, 0)
+})
+
+test("the lineup timer settles with one vote after twenty seconds", () => {
+  const host = seat(createRoom("Ada"))
+  const guest = seat(joinRoom(host.code, "Grace"))
+  fillSolvedForTest(host.code)
+  const opened = applyOp(host.token, host.code, { type: "check" })
+  assert.equal(opened.view.scene, "lineup")
+  assert.ok(opened.view.voteEndsAt > Date.now())
+  applyOp(host.token, host.code, { type: "vote", suspect: culpritName })
+  assert.equal(snapshot(guest.token, host.code).scene, "lineup")
+  const after = sweep(opened.view.voteEndsAt + 1)
+  assert.equal(after.changed.length, 1)
+  const view = snapshot(guest.token, host.code)
+  assert.equal(view.scene, "reveal")
+  assert.equal(view.accused, culpritName)
+})
+
+test("everyone voting early opens the envelope before the timer", () => {
+  const host = seat(createRoom("Ada"))
+  const guest = seat(joinRoom(host.code, "Grace"))
+  fillSolvedForTest(host.code)
+  applyOp(host.token, host.code, { type: "check" })
+  applyOp(host.token, host.code, { type: "vote", suspect: culpritName })
+  const done = applyOp(guest.token, host.code, { type: "vote", suspect: culpritName })
+  assert.equal(done.view.scene, "reveal")
+  assert.equal(done.view.accused, culpritName)
+})
+
+test("a zero-vote timer does not open the envelope", () => {
+  const host = seat(createRoom("Ada"))
+  fillSolvedForTest(host.code)
+  const opened = applyOp(host.token, host.code, { type: "check" })
+  sweep(opened.view.voteEndsAt + VOTE_MS)
+  assert.equal(snapshot(host.token, host.code).scene, "lineup")
+  const late = applyOp(host.token, host.code, { type: "vote", suspect: culpritName })
+  assert.equal(late.view.scene, "reveal")
 })

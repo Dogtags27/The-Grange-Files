@@ -10,6 +10,17 @@ export function loadSave() {
   }
 }
 
+export function hasProgress(data = loadSave()) {
+  if (!data) return false
+  return (
+    Object.keys(data.cells ?? {}).length > 0 ||
+    Object.keys(data.notes ?? {}).length > 0 ||
+    Object.keys(data.checked ?? {}).length > 0 ||
+    (data.stats?.elder ?? 0) > 0 ||
+    (data.penalty ?? 0) > 0
+  )
+}
+
 export function writeSave(data) {
   try {
     localStorage.setItem(KEY, JSON.stringify(data))

@@ -3,13 +3,14 @@ import { applyClick, collectMarks, placeTick, removeMarks } from "../../frontend
 import { pickDoubt } from "./doubt.js"
 import { evaluateHint } from "./hints.js"
 import { puzzle } from "./puzzle.js"
-import { culpritDetails, culpritName, fullSolution, isSolved, suspectNames } from "./solution.js"
+import { culpritDetails, culpritName, fullSolution, isSolved, suspectNames, truth } from "./solution.js"
 
 export const MAX_SEATS = 5
 export const MAX_ROOMS = 40
 export const EMPTY_TTL_MS = 15 * 60 * 1000
 export const SEAT_STALE_MS = 8 * 60 * 1000
 export const REVEAL_MS = 22 * 1000
+export const VOTE_MS = 20 * 1000
 const CODE_RE = /^[a-z]{3,5}-[a-z]{3,5}$/
 const COLORS = ["#3d6cb5", "#c36a22", "#7a4fad", "#2f8a8f", "#a8457a"]
 const WORDS = ["hay", "pie", "goat", "mine", "fair", "cola", "dock", "barn", "lamp", "crow", "plum", "moss", "rust", "kiln", "reed", "pond", "cart", "wool", "pear", "salt", "mill", "coop", "gate", "vine", "cork", "loaf", "pail", "well", "boot", "drum"]
@@ -54,6 +55,7 @@ function blank(code) {
     members: new Map(),
     scene: null,
     sceneAt: 0,
+    voteEndsAt: 0,
     votes: {},
     split: null,
     doubt: null,
@@ -159,6 +161,7 @@ export function view(room, memberId) {
     roster: room.roster,
     serverNow: Math.floor(Date.now() / 1000),
     scene: room.scene,
+    voteEndsAt: room.voteEndsAt || 0,
     votes: room.votes,
     split: room.split,
     doubt: room.doubt,
@@ -318,17 +321,35 @@ function beginReveal(room, suspect, member) {
   }
 }
 
+function settleLineup(room, member) {
+  const votes = Object.values(room.votes)
+  if (!votes.length) return false
+  const counts = {}
+  for (const suspect of votes) counts[suspect] = (counts[suspect] ?? 0) + 1
+  const ranked = Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  if (ranked.length === 1 || ranked[0][1] > ranked[1][1]) {
+    beginReveal(room, ranked[0][0], member)
+    return true
+  }
+  room.split = Object.fromEntries(ranked)
+  return true
+}
+
 function voteState(room, member) {
   const ids = [...room.members.keys()]
-  if (!ids.every((id) => room.votes[id])) {
-    room.split = null
-    return
+  const voted = ids.filter((id) => room.votes[id])
+  room.split = null
+  if (!voted.length) return
+  if (voted.length === ids.length || (room.voteEndsAt && Date.now() >= room.voteEndsAt)) {
+    settleLineup(room, member)
   }
-  const counts = {}
-  for (const id of ids) counts[room.votes[id]] = (counts[room.votes[id]] ?? 0) + 1
-  const ranked = Object.entries(counts).sort((a, b) => b[1] - a[1])
-  if (ranked.length === 1) beginReveal(room, ranked[0][0], member)
-  else room.split = Object.fromEntries(ranked)
+}
+
+function dueVote(room, now = Date.now()) {
+  if (room.scene !== "lineup" || !room.voteEndsAt || now < room.voteEndsAt) return false
+  if (!Object.keys(room.votes).length) return false
+  const member = room.members.values().next().value ?? null
+  return settleLineup(room, member)
 }
 
 function fail(status, error) {
@@ -428,6 +449,8 @@ export function applyOp(token, code, op) {
     const ticks = collectMarks(room.cells).ticks
     if (isSolved(ticks)) {
       room.scene = "lineup"
+      room.sceneAt = Date.now()
+      room.voteEndsAt = room.sceneAt + VOTE_MS
       room.votes = {}
       room.split = null
       room.doubt = null
@@ -444,6 +467,9 @@ export function applyOp(token, code, op) {
     if (room.scene !== "lineup" || !suspectNames.includes(op.suspect)) return fail(400, "vote")
     room.votes[member.id] = op.suspect
     voteState(room, member)
+  } else if (type === "tally") {
+    if (room.scene !== "lineup") return fail(409, "scene")
+    dueVote(room)
   } else if (type === "present") {
     if (room.scene !== "lineup" || !room.split) return fail(409, "split")
     const ranked = Object.entries(room.split).sort((a, b) => b[1] - a[1])
@@ -452,6 +478,7 @@ export function applyOp(token, code, op) {
   } else if (type === "back") {
     if (room.scene !== "lineup") return fail(409, "scene")
     room.scene = null
+    room.voteEndsAt = 0
     room.votes = {}
     room.split = null
   } else if (type === "finish") {
@@ -495,6 +522,7 @@ export function sweep(now = Date.now()) {
   for (const [code, room] of rooms) {
     const before = room.rev
     if (room.scene === "reveal" && now - room.sceneAt >= REVEAL_MS) finishReveal(room)
+    if (dueVote(room, now)) room.rev += 1
     for (const member of [...room.members.values()]) {
       if (now - member.seen > SEAT_STALE_MS) {
         room.members.delete(member.id)
@@ -519,4 +547,10 @@ export function sweep(now = Date.now()) {
 export function resetRooms() {
   rooms.clear()
   byToken.clear()
+}
+
+export function fillSolvedForTest(code) {
+  const room = rooms.get(code)
+  if (!room) return
+  for (const key of truth) room.cells = placeTick(room.cells, key)
 }

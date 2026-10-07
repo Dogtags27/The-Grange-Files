@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { fill, pickOne } from "../api"
 import { accuseLines } from "../content"
-import { useCompact } from "../hooks"
+import { useCompact, useNow } from "../hooks"
 import Figure from "./Figure"
 
 const marks = [
@@ -25,7 +25,50 @@ function Circle() {
   )
 }
 
-export default function Lineup({ suspects, onBack, onPresent, ballots, onPick, presentText, presentOff, note }) {
+function VoteClock({ endsAt, skew = 0, onExpire }) {
+  const now = useNow(250)
+  const fired = useRef(false)
+  const left = endsAt ? Math.max(0, Math.ceil((endsAt - (now + skew)) / 1000)) : 0
+
+  useEffect(() => {
+    if (!endsAt) return
+    if (left > 0) {
+      fired.current = false
+      return
+    }
+    if (fired.current) return
+    fired.current = true
+    onExpire?.()
+  }, [endsAt, left, onExpire])
+
+  if (!endsAt) return null
+
+  return (
+    <p className="vote-clock" role="timer" aria-live="polite">
+      {left > 0 ? (
+        <>
+          <b>{left}s</b> left to circle a suspect
+        </>
+      ) : (
+        <>Time is up. Waiting for at least one circle.</>
+      )}
+    </p>
+  )
+}
+
+export default function Lineup({
+  suspects,
+  onBack,
+  onPresent,
+  ballots,
+  onPick,
+  presentText,
+  presentOff,
+  note,
+  voteEndsAt,
+  skew = 0,
+  onVoteExpire,
+}) {
   const compact = useCompact()
   const [pick, setPick] = useState(null)
   const [line, setLine] = useState("")
@@ -66,9 +109,18 @@ export default function Lineup({ suspects, onBack, onPresent, ballots, onPick, p
         <p className="file">The lineup</p>
         <h2>Who did it?</h2>
         <p className="scene-sub">
-          {compact ? "Tap a suspect to circle them." : "Click a suspect to circle them, or use the arrow keys."} You can
-          change your mind until you present your answer.
+          {shared
+            ? compact
+              ? "Tap a suspect to cast your circle. Skipping is fine."
+              : "Click a suspect to cast your circle, or use the arrow keys. Skipping is fine."
+            : compact
+              ? "Tap a suspect to circle them."
+              : "Click a suspect to circle them, or use the arrow keys."}{" "}
+          {shared
+            ? "The envelope opens when everyone has voted, or when the timer ends with at least one circle."
+            : "You can change your mind until you present your answer."}
         </p>
+        {shared && <VoteClock endsAt={voteEndsAt} skew={skew} onExpire={onVoteExpire} />}
         <div className="wall">
           <div className="floor" />
           {marks.map((mark) => (

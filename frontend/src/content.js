@@ -101,7 +101,7 @@ export const finaleLines = [
 export const tableRules = [
   "Up to five people share one sheet, one clock, and one Elder bill. His minutes come off everyone's time.",
   "Anyone can tick, cross, undo, redo, and pencil. A pencil note shows in that person's color.",
-  "The lineup opens only when every tick is right. Each of you circles a suspect. If you all agree, the envelope opens on every screen. If you split, Mayor Lewis waits, and the bigger group can go ahead.",
+  "The lineup opens only when every tick is right. You get twenty seconds to circle a suspect. Skipping is fine, but at least one circle is required before the envelope opens. If you all vote early, it opens early. A tied vote waits for the bigger group to present.",
   "If you go quiet for five minutes you get a warning. Two more minutes without a reply and your seat is freed. Closing the tab drops you after about eight minutes. If everyone is gone, the table is thrown out 15 minutes later.",
   "A shared table does not touch the solo case saved in this browser.",
 ]
@@ -164,9 +164,9 @@ export const legal = {
     title: "Privacy",
     items: [
       "We do not collect your data. There are no accounts, cookies, trackers, or analytics.",
-      "Your marks, ticks, and timer live in your browser tab and disappear when you refresh or leave.",
+      "Your solo marks, ticks, and timer stay in this browser so a refresh can pick up the sheet. Nothing is uploaded. Clear the sheet or finish the case and that local copy goes away.",
       "Fonts are served from this site, so no third party sees you visit.",
-      "Nothing is sold, shared, or saved, because there is nothing to sell, share, or save.",
+      "Nothing is sold or shared. Shared tables live only in memory on the server for as long as people stay seated.",
     ],
   },
 }
