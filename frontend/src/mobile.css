@@ -26,15 +26,16 @@
   flex-direction: column;
   background: var(--paper);
   border-top: 2px solid var(--ink);
-  padding-bottom: env(safe-area-inset-bottom);
   outline: none;
   transition: transform 0.2s ease-out;
   animation: drawerup 0.22s ease-out both;
 }
 
 .drawer.tall {
-  height: 82vh;
-  height: 82dvh;
+  height: 92vh;
+  height: 92dvh;
+  max-height: 92vh;
+  max-height: 92dvh;
 }
 
 .drawer-grip {
@@ -70,10 +71,12 @@
 }
 
 .drawer-body {
+  flex: 1;
+  min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: 14px 16px 22px;
+  padding: 14px 16px calc(12px + env(safe-area-inset-bottom));
 }
 
 @keyframes drawerup {
@@ -609,6 +612,8 @@
 
 .clues.in-sheet {
   width: auto;
+  height: auto;
+  max-height: none;
   display: block;
   background: none;
   border: 0;
