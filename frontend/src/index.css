@@ -2343,9 +2343,59 @@ button.text-link {
 }
 
 .reveal-desk {
-  --desk-h: clamp(200px, 28vh, 300px);
-  margin-bottom: 22px;
-  border-color: #3a2e24;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  height: auto;
+  border: 0;
+}
+
+.reveal-shade {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 62%;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(21, 16, 11, 0), rgba(21, 16, 11, 0.9) 70%);
+}
+
+.scene.reveal .scene-inner.reveal-text {
+  position: relative;
+  z-index: 2;
+  align-self: flex-end;
+  margin: 0 auto;
+  min-height: 0;
+  padding-bottom: 44px;
+}
+
+.reveal-text .beats {
+  min-height: 0;
+}
+
+.reveal-text .beat {
+  opacity: 1;
+  text-align: center;
+  font-size: clamp(20px, 3vw, 30px);
+}
+
+.reveal-text .big {
+  margin-top: 4px;
+  text-align: center;
+}
+
+.reveal-text .big.name {
+  font-size: clamp(38px, 6vw, 68px);
+}
+
+.reveal-text .big.no,
+.reveal-text .big.yes {
+  font-size: clamp(36px, 6.5vw, 76px);
+}
+
+.reveal-text .verdict {
+  text-align: center;
 }
 
 @media (max-width: 700px) {
