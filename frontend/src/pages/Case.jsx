@@ -17,6 +17,7 @@ import { useCompact, useNudge } from "../hooks"
 import { useI18n } from "../i18n.jsx"
 import { applyClick, collectMarks, countAllTicks, placeTick, removeMarks } from "../logic"
 import { describeCell, emptyStats, printSheet } from "../report"
+import { playAccuse, playElder, playPencil, playSheetClick } from "../sfx"
 import { clearSave, hasProgress, loadSave, writeSave } from "../storage"
 
 const Lineup = lazy(() => import("../components/Lineup"))
@@ -221,10 +222,12 @@ export default function Case() {
     setSpotlight([])
     const key = `${grid.id}:${r}:${c}`
     if (pencil) {
+      playPencil()
       toggleNote(key)
       return
     }
     const result = applyClick(cells, grid.id, r, c, grid.rowValues.length, grid.rowValues, grid.colValues)
+    playSheetClick(cells[key]?.mark, result.state[key]?.mark, result.state === cells)
     if (result.state !== cells) {
       const before = cells[key]?.mark
       const after = result.state[key]?.mark
@@ -255,6 +258,7 @@ export default function Case() {
   }
 
   async function askElder() {
+    playElder()
     setElder({ mode: "loading" })
     try {
       const result = await postJson("/api/hint", collectMarks(cells))
@@ -286,6 +290,7 @@ export default function Case() {
   }
 
   async function openLineup() {
+    playAccuse()
     setChecking(true)
     try {
       const result = await postJson("/api/check", { ticks: collectMarks(cells).ticks })

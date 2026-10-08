@@ -15,6 +15,8 @@ import Reveal from "../components/Reveal"
 import { CaseSkeleton } from "../components/Skeletons"
 import TableForm from "../components/TableForm"
 import { apiUrl } from "../api"
+import { applyClick } from "../logic"
+import { playAccuse, playElder, playPencil, playSheetClick } from "../sfx"
 import { useCompact, useNudge } from "../hooks"
 import { copyText } from "../report"
 import { act, agoText, clearSeat, leaveTable, loadSeat, loadTable, mergeTouched, noteInk, pingTable, unpackCells } from "../table"
@@ -330,6 +332,16 @@ export default function TablePlay() {
   }
 
   const cells = unpackCells(table.cells)
+
+  function onCell(grid, r, c) {
+    const key = `${grid.id}:${r}:${c}`
+    if (pencil) playPencil()
+    else {
+      const result = applyClick(cells, grid.id, r, c, grid.rowValues.length, grid.rowValues, grid.colValues)
+      playSheetClick(cells[key]?.mark, result.state[key]?.mark, result.state === cells)
+    }
+    op(pencil ? { type: "note", key } : { type: "click", gridId: grid.id, r, c })
+  }
   const ticks = Object.values(table.cells).filter((value) => value === 1).length
   const suspects = puzzle.categories.find((category) => category.id === "suspects")?.values ?? []
   const values = puzzle.categories.flatMap((category) => category.values)
@@ -413,7 +425,7 @@ export default function TablePlay() {
       {ticks === MAX_TICKS && !table.scene && (
         <div className="accuse-bar">
           <p>Every block is full. The lineup gives everyone twenty seconds to circle a suspect.</p>
-          <button type="button" className="solid" onClick={() => op({ type: "check" })}>Name the culprit</button>
+          <button type="button" className="solid" onClick={() => { playAccuse(); op({ type: "check" }) }}>Name the culprit</button>
         </div>
       )}
       {error && <p className="status">{error}</p>}
@@ -450,7 +462,7 @@ export default function TablePlay() {
             outlined={[...(table.toast?.blockers ?? []), ...table.spotlight]}
             pulse={pulse}
             trace={trace}
-            onCell={(grid, r, c) => op(pencil ? { type: "note", key: `${grid.id}:${r}:${c}` } : { type: "click", gridId: grid.id, r, c })}
+            onCell={onCell}
             onNote={(key) => op({ type: "note", key })}
             checked={table.checked}
             onToggleClue={(index) => op({ type: "clue", index })}
@@ -513,7 +525,7 @@ export default function TablePlay() {
             outlined={[...(table.toast?.blockers ?? []), ...table.spotlight]}
             pulse={pulse}
             trace={trace}
-            onCell={(grid, r, c) => op(pencil ? { type: "note", key: `${grid.id}:${r}:${c}` } : { type: "click", gridId: grid.id, r, c })}
+            onCell={onCell}
             onNote={(key) => op({ type: "note", key })}
             timer={<TimerPanel startedAt={table.startedAt} frozenAt={table.frozenAt} penalty={table.penalty} />}
             panic={<PanicPanel ticks={ticks} total={MAX_TICKS} />}
@@ -542,7 +554,7 @@ export default function TablePlay() {
           <p>Five minutes went by with no clicks or keys. Say you are still here, or your seat will free up in two minutes so someone else can sit.</p>
         </Modal>
       )}
-      {elderAsk && <ElderConfirm onCancel={() => setElderAsk(false)} onConfirm={() => { setElderAsk(false); op({ type: "hint" }) }} />}
+      {elderAsk && <ElderConfirm onCancel={() => setElderAsk(false)} onConfirm={() => { playElder(); setElderAsk(false); op({ type: "hint" }) }} />}
       {table.elder && <ElderResult ui={{ mode: "result", result: table.elder.result, seed: table.rev }} onClose={() => op({ type: "elderClose" })} />}
       <Suspense fallback={null}>
         {table.scene === "lineup" && (

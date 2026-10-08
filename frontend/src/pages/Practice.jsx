@@ -5,6 +5,7 @@ import Mark from "../components/Mark"
 import Masthead from "../components/Masthead"
 import { useI18n } from "../i18n.jsx"
 import { applyClick } from "../logic"
+import { playSheetClick } from "../sfx"
 import { GRID, answer, clues, cols, rows, steps } from "../practice"
 
 const SIZE = 3
@@ -44,7 +45,9 @@ export default function Practice() {
   }
 
   function play(r, c) {
+    const key = `${GRID}:${r}:${c}`
     const result = applyClick(state, GRID, r, c, SIZE, rows, cols)
+    playSheetClick(state[key]?.mark, result.state[key]?.mark, result.state === state)
     const changed = result.state !== state
     const nextFlags = !changed && result.toast ? { ...flags, blocked: true } : flags
     const nextToast = result.toast ? { text: result.toast, blockers: result.blockers } : null

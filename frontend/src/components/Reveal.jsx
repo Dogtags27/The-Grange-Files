@@ -3,6 +3,7 @@ import { fill, pickOne } from "../api"
 import { revealBeats, wrongLines } from "../content"
 import { useI18n } from "../i18n.jsx"
 import NoirDesk from "../noir/NoirDesk"
+import { announceVerdict, beginReveal, finishReveal, leaveReveal } from "../revealAudio"
 
 const BEAT_MS = 2700
 const LAST_STAGE = 7
@@ -13,15 +14,24 @@ export default function Reveal({ name, suspects = [], result, failed, onWrong, o
   const [wrongLine] = useState(() => pickOne(wrongLines))
 
   useEffect(() => {
+    beginReveal()
     const ids = []
     for (let i = 1; i <= LAST_STAGE; i++) {
       ids.push(setTimeout(() => setStage(i), i * BEAT_MS))
     }
-    return () => ids.forEach(clearTimeout)
+    return () => {
+      ids.forEach(clearTimeout)
+      leaveReveal()
+    }
   }, [])
 
   const ready = stage >= LAST_STAGE && Boolean(result)
   const solved = ready && result.correct
+
+  useEffect(() => {
+    if (failed) leaveReveal()
+    else if (ready) announceVerdict(result.correct ? "guilty" : "clear")
+  }, [ready, result, failed])
 
   useEffect(() => {
     if (!solved) return undefined
@@ -62,7 +72,7 @@ export default function Reveal({ name, suspects = [], result, failed, onWrong, o
         {failed && (
           <div className="verdict">
             <p className="beat now">{t("The envelope got lost. The backend did not answer.")}</p>
-            <button type="button" className="solid" onClick={onBack}>
+            <button type="button" className="solid" onClick={() => { finishReveal(); onBack() }}>
               {t("Back to the grid")}
             </button>
           </div>
@@ -71,7 +81,7 @@ export default function Reveal({ name, suspects = [], result, failed, onWrong, o
           <div className="verdict">
             <p className="big no">{t("Not guilty")}</p>
             <p className="beat now">{t(wrongLine)}</p>
-            <button type="button" className="solid" onClick={onWrong} autoFocus>
+            <button type="button" className="solid" onClick={() => { finishReveal(); onWrong() }} autoFocus>
               {t("Back to the grid")}
             </button>
           </div>

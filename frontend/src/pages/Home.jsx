@@ -11,6 +11,7 @@ import { apiUrl } from "../api"
 import { groundRule, homeTease, story } from "../content"
 import { clock } from "../hooks"
 import { useI18n } from "../i18n.jsx"
+import { introBed } from "../introBed"
 import { clearSave, hasProgress, loadSave } from "../storage"
 
 const SEEN = "grange-intro-seen"
@@ -40,6 +41,16 @@ export default function Home() {
   const navigate = useNavigate()
   const { t, term } = useI18n()
 
+  function stepUp() {
+    introBed().approach()
+    setPhase("desk")
+  }
+
+  function skipToSettle() {
+    introBed().hold()
+    setPhase("settle")
+  }
+
   useEffect(() => {
     let alive = true
     fetch(apiUrl("/api/puzzle"))
@@ -63,6 +74,13 @@ export default function Home() {
     window.addEventListener("resize", onResize)
     return () => window.removeEventListener("resize", onResize)
   }, [])
+
+  useEffect(() => {
+    const bed = introBed()
+    if (phase === "room") bed.enterRoom()
+    else if (phase === "desk") bed.approach()
+    else bed.hold()
+  }, [phase])
 
   useEffect(() => {
     const next = { room: ["desk", ROOM_WAIT_MS], desk: ["settle", DESK_MS], settle: ["done", SETTLE_MS] }[phase]
@@ -104,7 +122,7 @@ export default function Home() {
           mood={phase === "room" ? "room" : "idle"}
           sweep={phase === "room" ? null : phase === "desk" ? "fast" : "slow"}
           sway
-          onEnter={phase === "room" ? () => setPhase("desk") : undefined}
+          onEnter={phase === "room" ? stepUp : undefined}
           label="A dim detective office with a lit desk and five mugshot cards while a lamp light drifts across them"
         />
         {phase === "room" && (
@@ -114,10 +132,10 @@ export default function Home() {
               <p className="intro-sub">{t("File CS5002-1. One lamp is still on.")}</p>
             </div>
             <div className="intro-actions">
-              <button type="button" className="solid" onClick={() => setPhase("desk")}>
+              <button type="button" className="solid" onClick={stepUp}>
                 {t("Step up to the desk")}
               </button>
-              <button type="button" className="intro-skip" onClick={() => setPhase("settle")}>
+              <button type="button" className="intro-skip" onClick={skipToSettle}>
                 {t("Skip")}
               </button>
             </div>

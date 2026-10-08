@@ -6,6 +6,7 @@ import { finaleLines } from "../content"
 import { clock } from "../hooks"
 import { copyText, downloadHtml, rankFor, reportDocument, textReport } from "../report"
 import NoirDesk from "../noir/NoirDesk"
+import { finishReveal } from "../revealAudio"
 import { shareEndCard } from "../shareCard"
 
 export default function Celebration({ result, puzzle, cells, seconds, penalty, stats, log, onClose }) {
@@ -114,7 +115,7 @@ export default function Celebration({ result, puzzle, cells, seconds, penalty, s
             >
               {t("Download the full case file")}
             </button>
-            <button type="button" className="ghost" onClick={onClose}>
+            <button type="button" className="ghost" onClick={() => { finishReveal(); onClose() }}>
               {t("Look at my grid")}
             </button>
             <Link className="ghost" to="/">
