@@ -64,6 +64,10 @@ function publish(room) {
   if (room) broadcast(room.code, broadcastBody(room))
 }
 
+app.get("/api/health", (_req, res) => {
+  res.set("Cache-Control", "no-store").json({ ok: true })
+})
+
 app.get("/api/puzzle", readLimit, (_req, res) => {
   res.json(puzzle)
 })
