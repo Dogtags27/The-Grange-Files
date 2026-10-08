@@ -29,30 +29,32 @@ export default function Reveal({ name, suspects = [], result, failed, onWrong, o
     return () => clearTimeout(id)
   }, [solved, onSolved])
 
-  const shownBeats = revealBeats.slice(0, Math.min(stage, revealBeats.length - 1) + 1)
+  const beatIndex = Math.min(stage, revealBeats.length - 1)
 
   return (
     <div className="scene reveal" role="dialog" aria-modal="true" aria-label="The reveal">
-      <div className="scene-inner">
-        {suspects.length > 0 && (
-          <NoirDesk
-            className="reveal-desk"
-            suspects={suspects}
-            focus={stage >= 5 ? name : null}
-            circled={stage >= 5 ? name : null}
-            sweep={stage < 5 ? "fast" : null}
-            mood={ready ? (result.correct ? "guilty" : "cleared") : "idle"}
-            label="The desk lamp searches the five suspect cards, then settles on the accused."
-          />
-        )}
-        <div className="beats">
-          {shownBeats.map((beat, index) => (
-            <p key={beat} className={index === shownBeats.length - 1 && stage < 5 ? "beat now" : "beat"}>
-              {fill(t(beat), { name })}
+      {suspects.length > 0 && (
+        <NoirDesk
+          className="reveal-desk"
+          suspects={suspects}
+          view="desk"
+          room
+          focus={stage >= 5 ? name : null}
+          circled={stage >= 5 ? name : null}
+          sweep={stage < 5 ? "fast" : null}
+          mood={ready ? (result.correct ? "guilty" : "cleared") : "idle"}
+          label="The desk lamp searches the five suspect cards, then settles on the accused."
+        />
+      )}
+      <div className="reveal-shade" aria-hidden="true" />
+      <div className="scene-inner reveal-text">
+        {stage < 5 && (
+          <div className="beats">
+            <p key={beatIndex} className="beat now">
+              {fill(t(revealBeats[beatIndex]), { name })}
             </p>
-          ))}
-        </div>
-        {stage >= 5 && <p className="big name">{name}</p>}
+          </div>
+        )}        {stage >= 5 && <p className="big name">{name}</p>}
         {stage >= 6 && !failed && <p className="big is">{t("is...")}</p>}
         {stage >= LAST_STAGE && !result && !failed && (
           <p className="beat now">{t("Mayor Lewis is squinting at the small print...")}</p>
