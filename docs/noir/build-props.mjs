@@ -1,4 +1,4 @@
-﻿import { execFileSync } from "node:child_process"
+import { execFileSync } from "node:child_process"
 import fs from "node:fs"
 import path from "node:path"
 import { NodeIO, Document } from "@gltf-transform/core"
@@ -12,6 +12,7 @@ const names = [
   "Alcohol_Bottle_01", "Alcohol_Glass_01", "Folder_01", "Folder_02", "Folder_03",
   "Paper_01", "Paper_02", "Paper_03", "Paper_Pile_01", "Paper_Crumpled_01", "Pen_01",
   "Phone_01", "Pinboard_01", "Cup_Coffee_01", "Cigarette_Pack_01",
+  "Armchair_01", "Cardboard_Box_01", "Cardboard_Box_02", "Cardboard_Box_03", "Box_01",
 ]
 const exe = path.resolve("node_modules/fbx2gltf/bin/Windows_NT/FBX2glTF.exe")
 fs.mkdirSync("out", { recursive: true })

@@ -4,6 +4,7 @@ import Footer from "../components/Footer"
 import Masthead from "../components/Masthead"
 import { suspectNames } from "../components/portraits"
 import NoirDesk from "../noir/NoirDesk"
+import { canUse3d, prefersStill } from "../noir/support"
 import { LedgerSkeleton } from "../components/Skeletons"
 import TableForm from "../components/TableForm"
 import { apiUrl } from "../api"
@@ -11,7 +12,26 @@ import { groundRule, homeTease, story } from "../content"
 import { clock } from "../hooks"
 import { clearSave, hasProgress, loadSave } from "../storage"
 
+const SEEN = "grange-intro-seen"
+const ROOM_WAIT_MS = 60 * 1000
+const DESK_MS = 10500
+const SETTLE_MS = 2200
+
+function skipIntro() {
+  try {
+    return !canUse3d() || prefersStill() || sessionStorage.getItem(SEEN) === "1"
+  } catch {
+    return true
+  }
+}
+
+function bannerHeight(vh) {
+  return vh < 640 || window.innerWidth >= 640 ? Math.min(380, Math.max(220, Math.round(vh * 0.36))) : Math.min(400, Math.max(300, Math.round(vh * 0.42)))
+}
+
 export default function Home() {
+  const [phase, setPhase] = useState(() => (skipIntro() ? "done" : "room"))
+  const [vh, setVh] = useState(() => window.innerHeight)
   const [puzzle, setPuzzle] = useState(null)
   const [failed, setFailed] = useState(false)
   const [gate, setGate] = useState(null)
@@ -36,21 +56,78 @@ export default function Home() {
     }
   }, [])
 
+  useEffect(() => {
+    const onResize = () => setVh(window.innerHeight)
+    window.addEventListener("resize", onResize)
+    return () => window.removeEventListener("resize", onResize)
+  }, [])
+
+  useEffect(() => {
+    const next = { room: ["desk", ROOM_WAIT_MS], desk: ["settle", DESK_MS], settle: ["done", SETTLE_MS] }[phase]
+    if (!next) return undefined
+    if (phase === "room") markSeen()
+    const id = setTimeout(() => setPhase(next[0]), next[1])
+    return () => clearTimeout(id)
+  }, [phase])
+
+  function markSeen() {
+    try {
+      sessionStorage.setItem(SEEN, "1")
+    } catch {
+      return
+    }
+  }
+
   function startFresh() {
     clearSave()
     navigate("/case")
   }
 
   return (
-    <div className="home">
-      <Masthead />
-      <NoirDesk
-        className="home-desk"
-        suspects={suspectNames}
-        sweep="slow"
-        sway
-        label="A dim detective desk with five mugshot cards while a lamp light drifts across them"
-      />
+    <div className={phase === "done" ? "home" : phase === "settle" ? "home intro" : "home intro hold"}>
+      <div className={phase === "room" || phase === "desk" ? "mast-wrap folded" : "mast-wrap"}>
+        <div>
+          <Masthead />
+        </div>
+      </div>
+      <div
+        className="home-stage"
+        style={{ height: phase === "room" || phase === "desk" ? vh : bannerHeight(vh) }}
+      >
+        <NoirDesk
+          className="home-desk"
+          suspects={suspectNames}
+          view={phase === "room" ? "room" : phase === "desk" ? "desk" : "banner"}
+          room
+          mood={phase === "room" ? "room" : "idle"}
+          sweep={phase === "room" ? null : phase === "desk" ? "fast" : "slow"}
+          sway
+          onEnter={phase === "room" ? () => setPhase("desk") : undefined}
+          label="A dim detective office with a lit desk and five mugshot cards while a lamp light drifts across them"
+        />
+        {phase === "room" && (
+          <div className="intro-ui">
+            <div aria-hidden="true">
+              <p className="intro-title">The Grange Files</p>
+              <p className="intro-sub">File CS5002-1. One lamp is still on.</p>
+            </div>
+            <div className="intro-actions">
+              <button type="button" className="solid" onClick={() => setPhase("desk")}>
+                Step up to the desk
+              </button>
+              <button type="button" className="intro-skip" onClick={() => setPhase("settle")}>
+                Skip
+              </button>
+            </div>
+          </div>
+        )}
+        {phase === "desk" && (
+          <p className="intro-caption" aria-hidden="true">
+            Five names. One of them did it.
+          </p>
+        )}
+      </div>
+      <div className="home-body">
       <main className="wrap home-main">
         <section className="lede">
           <p className="file">File CS5002-1</p>
@@ -130,6 +207,7 @@ export default function Home() {
         </section>
       </main>
       <Footer />
+      </div>
     </div>
   )
 }

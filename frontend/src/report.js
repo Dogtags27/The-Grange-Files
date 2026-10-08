@@ -112,8 +112,14 @@ const styles = `
 body{margin:0;background:#efe4d0;color:#241910;font:14px/1.45 "Segoe UI",Tahoma,sans-serif}
 main{max-width:760px;margin:0 auto;padding:28px 24px 48px}
 h1,h2{font-family:Georgia,"Times New Roman",serif;margin:0 0 6px}
-h1{font-size:30px;line-height:1.1}
+h1{font-size:34px;line-height:1.05}
 h2{font-size:21px;border-bottom:2px solid #241910;padding-bottom:4px;margin-top:24px}
+.mast{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;margin:-28px -24px 22px;padding:26px 24px 22px;background:#241910;color:#efe4d0}
+.mast h1{color:#efe4d0}
+.kicker{margin:0 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.mast .sub{color:#e2d3b8}
+.seal{flex:none;width:92px;height:92px;border:3px solid #c8102e;display:grid;place-items:center}
+.seal span{font:700 13px Georgia,serif;letter-spacing:.12em;text-transform:uppercase;color:#c8102e;border-top:2px solid #c8102e;border-bottom:2px solid #c8102e;padding:4px 0}
 .sub{margin:0 0 4px;color:#6b5d4e}
 .verdict{margin:14px 0 0;padding:10px 14px;background:#c8102e;color:#f3ead8}
 .verdict p{margin:0}
@@ -192,8 +198,14 @@ export function reportDocument({ puzzle, result, cells, seconds, penalty, stats,
   const { culprit } = result
   const rank = rankFor(stats)
   const body = `
-<h1>The Grange Display Case: the full case file</h1>
-<p class="sub">File CS5002-1 | Northeastern MSCS Align | Closed ${esc(new Date().toLocaleString())}</p>
+<header class="mast">
+  <div>
+    <p class="kicker">Northeastern University, MSCS Align, CS5002</p>
+    <h1>The Grange Display Case</h1>
+    <p class="sub">File CS5002-1, closed ${esc(new Date().toLocaleString())}</p>
+  </div>
+  <div class="seal" aria-hidden="true"><span>Closed</span></div>
+</header>
 <div class="verdict"><p class="big">${esc(culprit.suspect)} did it.</p><p>${esc(culprit.location)}, ${esc(culprit.item)}, claiming ${esc(label(culprit.alibi))}</p></div>
 <h2>Your rank: ${esc(rank.title)}</h2>
 <p>${esc(rank.joke)}</p>
