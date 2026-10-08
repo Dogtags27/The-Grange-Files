@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { fill, pickOne } from "../api"
 import { accuseLines } from "../content"
 import { useCompact, useNow } from "../hooks"
+import NoirDesk from "../noir/NoirDesk"
 import Figure from "./Figure"
 
 const marks = [
@@ -103,25 +104,13 @@ export default function Lineup({
     choose(suspects[next])
   }
 
-  return (
-    <div className="scene lineup" role="dialog" aria-modal="true" aria-label="The lineup">
-      <div className="scene-inner">
-        <p className="file">The lineup</p>
-        <h2>Who did it?</h2>
-        <p className="scene-sub">
-          {shared
-            ? compact
-              ? "Tap a suspect to cast your circle. Skipping is fine."
-              : "Click a suspect to cast your circle, or use the arrow keys. Skipping is fine."
-            : compact
-              ? "Tap a suspect to circle them."
-              : "Click a suspect to circle them, or use the arrow keys."}{" "}
-          {shared
-            ? "The envelope opens when everyone has voted, or when the timer ends with at least one circle."
-            : "You can change your mind until you present your answer."}
-        </p>
-        {shared && <VoteClock endsAt={voteEndsAt} skew={skew} onExpire={onVoteExpire} />}
-        <div className="wall">
+  const voters = {}
+  for (const item of ballots ?? []) {
+    if (item.suspect) voters[item.suspect] = voters[item.suspect] ? `${voters[item.suspect]}, ${item.name}` : item.name
+  }
+
+  const wall = (
+      <div className="wall">
           <div className="floor" />
           {marks.map((mark) => (
             <p key={mark.label} className="ruler" style={{ bottom: `calc(var(--plate) + ${mark.offset}px)` }}>
@@ -163,6 +152,56 @@ export default function Lineup({
             ))}
           </div>
         </div>
+  )
+
+  return (
+    <div className="scene lineup" role="dialog" aria-modal="true" aria-label="The lineup">
+      <div className="scene-inner">
+        <p className="file">The lineup</p>
+        <h2>Who did it?</h2>
+        <p className="scene-sub">
+          {shared
+            ? compact
+              ? "Tap a suspect to cast your circle. Skipping is fine."
+              : "Click a suspect to cast your circle, or use the arrow keys. Skipping is fine."
+            : compact
+              ? "Tap a suspect to circle them."
+              : "Click a suspect to circle them, or use the arrow keys."}{" "}
+          {shared
+            ? "The envelope opens when everyone has voted, or when the timer ends with at least one circle."
+            : "You can change your mind until you present your answer."}
+        </p>
+        {shared && <VoteClock endsAt={voteEndsAt} skew={skew} onExpire={onVoteExpire} />}
+        <NoirDesk
+          className="lineup-desk"
+          suspects={suspects}
+          focus={chosen}
+          circled={chosen}
+          voters={voters}
+          onPick={choose}
+          label="A detective desk with five mugshot cards. The lamp lights the suspect you circle."
+          fallback={wall}
+        >
+          <div className="row-quiet" role="radiogroup" aria-label="Suspects">
+            {suspects.map((name, index) => (
+              <button
+                key={name}
+                ref={(node) => {
+                  buttons.current[index] = node
+                }}
+                type="button"
+                role="radio"
+                aria-checked={chosen === name}
+                tabIndex={chosen ? (chosen === name ? 0 : -1) : index === 0 ? 0 : -1}
+                onClick={() => choose(name)}
+                onKeyDown={(event) => onArrow(event, index)}
+              >
+                No. {index + 1} {name}
+                {voters[name] ? `, circled by ${voters[name]}` : ""}
+              </button>
+            ))}
+          </div>
+        </NoirDesk>
         <p className="mayor-line" aria-live="polite">
           {note || (chosen ? line : "Mayor Lewis is waiting, and he is very bad at it.")}
         </p>

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react"
 import { fill, pickOne } from "../api"
 import { revealBeats, wrongLines } from "../content"
+import NoirDesk from "../noir/NoirDesk"
 
 const BEAT_MS = 2700
 const LAST_STAGE = 7
 
-export default function Reveal({ name, result, failed, onWrong, onSolved, onBack }) {
+export default function Reveal({ name, suspects = [], result, failed, onWrong, onSolved, onBack }) {
   const [stage, setStage] = useState(0)
   const [wrongLine] = useState(() => pickOne(wrongLines))
 
@@ -31,6 +32,17 @@ export default function Reveal({ name, result, failed, onWrong, onSolved, onBack
   return (
     <div className="scene reveal" role="dialog" aria-modal="true" aria-label="The reveal">
       <div className="scene-inner">
+        {suspects.length > 0 && (
+          <NoirDesk
+            className="reveal-desk"
+            suspects={suspects}
+            focus={stage >= 5 ? name : null}
+            circled={stage >= 5 ? name : null}
+            sweep={stage < 5 ? "fast" : null}
+            mood={ready ? (result.correct ? "guilty" : "cleared") : "idle"}
+            label="The desk lamp searches the five suspect cards, then settles on the accused."
+          />
+        )}
         <div className="beats">
           {shownBeats.map((beat, index) => (
             <p key={beat} className={index === shownBeats.length - 1 && stage < 5 ? "beat now" : "beat"}>

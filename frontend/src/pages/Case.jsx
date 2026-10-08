@@ -570,6 +570,7 @@ export default function Case() {
       {scene === "reveal" && (
         <Reveal
           name={accused}
+          suspects={suspects}
           result={verdict.result}
           failed={verdict.failed}
           onWrong={afterWrong}

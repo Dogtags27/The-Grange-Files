@@ -4,8 +4,8 @@ import { pickOne } from "../api"
 import { finaleLines } from "../content"
 import { clock } from "../hooks"
 import { copyText, downloadHtml, rankFor, reportDocument, textReport } from "../report"
+import NoirDesk from "../noir/NoirDesk"
 import { shareEndCard } from "../shareCard"
-import Figure from "./Figure"
 
 export default function Celebration({ result, puzzle, cells, seconds, penalty, stats, log, onClose }) {
   const [finale] = useState(() => pickOne(finaleLines))
@@ -34,20 +34,24 @@ export default function Celebration({ result, puzzle, cells, seconds, penalty, s
     scene.current?.scrollTo(0, 0)
   }, [])
 
+  const names = solution.map((row) => row.suspect)
+
   return (
     <div ref={scene} className="scene solved" role="dialog" aria-modal="true" aria-label="Case closed">
+      <NoirDesk
+        className="end-desk"
+        suspects={names}
+        focus={culprit.suspect}
+        circled={culprit.suspect}
+        mood="guilty"
+        room
+        view="banner"
+        label={`The desk after the verdict, with the lamp on ${culprit.suspect}`}
+      />
       <div className="scene-inner">
         <p className="file">File CS5002-1</p>
         <h2>{culprit.suspect} did it.</h2>
         <p className="rank">Rank earned: {rank.title}</p>
-        <div className="parade">
-          {solution.map((row) => (
-            <div key={row.suspect} className={row.suspect === culprit.suspect ? "fig front" : "fig back"}>
-              <Figure name={row.suspect} size={150} />
-              <p>{row.suspect}</p>
-            </div>
-          ))}
-        </div>
         <p className="stamp">Case closed</p>
         <div className="finale">
           <p className="confession">
