@@ -15,6 +15,7 @@ import { introBed } from "../introBed"
 import { clearSave, hasProgress, loadSave } from "../storage"
 
 const SEEN = "grange-intro-seen"
+let musicOn = false
 const ROOM_WAIT_MS = 60 * 1000
 const DESK_MS = 10500
 const SETTLE_MS = 2200
@@ -37,7 +38,7 @@ function bannerHeight(vh) {
 
 export default function Home() {
   const [phase, setPhase] = useState(() => (skipIntro() ? "done" : "room"))
-  const [begun, setBegun] = useState(introSeen)
+  const [begun, setBegun] = useState(musicOn)
   const [vh, setVh] = useState(() => window.innerHeight)
   const [puzzle, setPuzzle] = useState(null)
   const [failed, setFailed] = useState(false)
@@ -48,6 +49,7 @@ export default function Home() {
 
   function begin() {
     markSeen()
+    musicOn = true
     const bed = introBed()
     if (phase === "room") bed.enterRoom()
     else if (phase === "desk") bed.approach()
