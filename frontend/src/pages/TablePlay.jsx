@@ -576,6 +576,7 @@ export default function TablePlay() {
       {table.scene === "reveal" && (
         <Reveal
           name={table.accused}
+          suspects={suspects}
           result={table.verdict}
           failed={!table.verdict}
           onWrong={() => op({ type: "finish" })}

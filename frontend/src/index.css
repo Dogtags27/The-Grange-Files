@@ -2223,3 +2223,72 @@ button.text-link {
     position: static;
   }
 }
+
+.desk-stage {
+  position: relative;
+  height: var(--desk-h, 340px);
+  background: #15100b;
+  border: 1px solid var(--ink);
+  overflow: hidden;
+}
+
+.desk-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.desk-canvas canvas {
+  display: block;
+  touch-action: manipulation;
+}
+
+.desk-wait {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--serif);
+  font-size: 18px;
+  color: var(--paper-deep);
+}
+
+.desk-stage:focus-within {
+  outline: 3px solid var(--husky);
+  outline-offset: 2px;
+}
+
+.home-desk {
+  --desk-h: clamp(220px, 36vh, 380px);
+  border-width: 0 0 1px;
+}
+
+.row-quiet {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.desk-art {
+  position: absolute;
+  inset: 0;
+}
+
+.lineup-desk {
+  --desk-h: clamp(300px, 46vh, 420px);
+}
+
+.reveal-desk {
+  --desk-h: clamp(200px, 28vh, 300px);
+  margin-bottom: 22px;
+  border-color: #3a2e24;
+}
+
+@media (max-width: 700px) {
+  .lineup-desk {
+    --desk-h: clamp(320px, 46vh, 420px);
+  }
+}

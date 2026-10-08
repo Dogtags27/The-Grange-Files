@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import Footer from "../components/Footer"
 import Masthead from "../components/Masthead"
+import { suspectNames } from "../components/portraits"
+import NoirDesk from "../noir/NoirDesk"
 import { LedgerSkeleton } from "../components/Skeletons"
 import TableForm from "../components/TableForm"
 import { apiUrl } from "../api"
@@ -42,6 +44,13 @@ export default function Home() {
   return (
     <div className="home">
       <Masthead />
+      <NoirDesk
+        className="home-desk"
+        suspects={suspectNames}
+        sweep="slow"
+        sway
+        label="A dim detective desk with five mugshot cards while a lamp light drifts across them"
+      />
       <main className="wrap home-main">
         <section className="lede">
           <p className="file">File CS5002-1</p>
@@ -58,7 +67,7 @@ export default function Home() {
                 Continue the case
               </Link>
               <p className="resume-note">
-                Sheet in this browser · about {clock(Math.floor((save.elapsedMs ?? 0) / 1000))} on the clock
+                Sheet in this browser Â· about {clock(Math.floor((save.elapsedMs ?? 0) / 1000))} on the clock
               </p>
               <p className="table-links">
                 <button type="button" onClick={startFresh}>
