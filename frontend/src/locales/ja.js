@@ -38,6 +38,7 @@ export default {
   "The Grange Files": "グランジの記録",
   "File CS5002-1. One lamp is still on.": "ファイル CS5002-1。ランプはまだ一つ点いている。",
   "Step up to the desk": "机に近づく",
+  "Begin": "始める",
   "Skip": "スキップ",
   "Five names. One of them did it.": "五つの名前。そのうちの一人がやった。",
   "File CS5002-1": "ファイル CS5002-1",

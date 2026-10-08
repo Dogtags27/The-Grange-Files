@@ -38,6 +38,7 @@ export default {
   "The Grange Files": "格兰奇档案",
   "File CS5002-1. One lamp is still on.": "档案 CS5002-1。还有一盏灯亮着。",
   "Step up to the desk": "走到桌前",
+  "Begin": "开始",
   "Skip": "跳过",
   "Five names. One of them did it.": "五个名字。其中一个是凶手。",
   "File CS5002-1": "档案 CS5002-1",

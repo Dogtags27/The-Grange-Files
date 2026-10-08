@@ -33,6 +33,7 @@ function bannerHeight(vh) {
 
 export default function Home() {
   const [phase, setPhase] = useState(() => (skipIntro() ? "done" : "room"))
+  const [begun, setBegun] = useState(false)
   const [vh, setVh] = useState(() => window.innerHeight)
   const [puzzle, setPuzzle] = useState(null)
   const [failed, setFailed] = useState(false)
@@ -40,6 +41,14 @@ export default function Home() {
   const [save] = useState(() => (hasProgress() ? loadSave() : null))
   const navigate = useNavigate()
   const { t, term } = useI18n()
+
+  function begin() {
+    const bed = introBed()
+    if (phase === "room") bed.enterRoom()
+    else if (phase === "desk") bed.approach()
+    else bed.hold()
+    setBegun(true)
+  }
 
   function stepUp() {
     introBed().approach()
@@ -76,19 +85,21 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
+    if (!begun) return
     const bed = introBed()
     if (phase === "room") bed.enterRoom()
     else if (phase === "desk") bed.approach()
     else bed.hold()
-  }, [phase])
+  }, [phase, begun])
 
   useEffect(() => {
+    if (!begun) return undefined
     const next = { room: ["desk", ROOM_WAIT_MS], desk: ["settle", DESK_MS], settle: ["done", SETTLE_MS] }[phase]
     if (!next) return undefined
     if (phase === "room") markSeen()
     const id = setTimeout(() => setPhase(next[0]), next[1])
     return () => clearTimeout(id)
-  }, [phase])
+  }, [phase, begun])
 
   function markSeen() {
     try {
@@ -103,8 +114,20 @@ export default function Home() {
     navigate("/case")
   }
 
-  return (
+    return (
     <div className={phase === "done" ? "home" : phase === "settle" ? "home intro" : "home intro hold"}>
+      {!begun && (
+        <div className="begin-frost" role="dialog" aria-modal="true" aria-labelledby="begin-title">
+          <div className="begin-card">
+            <p id="begin-title" className="intro-title">{t("The Grange Files")}</p>
+            <p className="intro-sub">{t("File CS5002-1. One lamp is still on.")}</p>
+            <button type="button" className="solid" onClick={begin} autoFocus>
+              {t("Begin")}
+            </button>
+          </div>
+        </div>
+      )}
+      <div className="home-live" inert={begun ? undefined : true}>
       <div className={phase === "room" || phase === "desk" ? "mast-wrap folded" : "mast-wrap"}>
         <div>
           <Masthead />
@@ -229,6 +252,7 @@ export default function Home() {
         </section>
       </main>
       <Footer />
+      </div>
       </div>
     </div>
   )
