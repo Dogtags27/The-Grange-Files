@@ -1,4 +1,5 @@
 import { Component, lazy, Suspense } from "react"
+import { useI18n } from "../i18n.jsx"
 import { canUse3d } from "./support"
 
 const DeskStage = lazy(() => import("./DeskStage"))
@@ -16,6 +17,7 @@ class Guard extends Component {
 }
 
 export default function NoirDesk({ className = "", label, fallback = null, children, ...stage }) {
+  const { t } = useI18n()
   if (!canUse3d()) return fallback
   return (
     <Guard fallback={fallback}>
@@ -26,7 +28,7 @@ export default function NoirDesk({ className = "", label, fallback = null, child
           aria-label={children ? undefined : label}
           aria-hidden={children ? true : undefined}
         >
-          <Suspense fallback={<p className="desk-wait">Switching the lamp on...</p>}>
+          <Suspense fallback={<p className="desk-wait">{t("Switching the lamp on...")}</p>}>
             <DeskStage {...stage} />
           </Suspense>
         </div>

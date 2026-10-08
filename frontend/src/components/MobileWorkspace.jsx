@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useRef, useState } from "react"
 import { useParsedClues } from "../hooks"
+import { useI18n } from "../i18n.jsx"
 import { countTicks } from "../logic"
 import ClueList, { ClueText } from "./ClueList"
 import Mark from "./Mark"
@@ -31,21 +32,22 @@ function listBlocks(bands) {
 }
 
 export function HowTo() {
+  const { t } = useI18n()
   return (
     <div className="m-how">
       <p>
         <span className="swatch no">
           <Mark kind="no" />
         </span>
-        Tap once to cross a cell out.
+        {t("Tap once to cross a cell out.")}
       </p>
       <p>
         <span className="swatch yes">
           <Mark kind="yes" />
         </span>
-        Tap again to tick it. That crosses out the rest of its row and column in the square.
+        {t("Tap again to tick it. The rest of that row and column cross out.")}
       </p>
-      <p className="m-how-more">A third tap clears it. Hold a cell to pencil a maybe. Swipe the grid to change square.</p>
+      <p className="m-how-more">{t("Tap a third time to clear it.")}</p>
     </div>
   )
 }
@@ -90,6 +92,7 @@ export default function MobileWorkspace({
   canRedo,
   menu,
 }) {
+  const { term } = useI18n()
   const blocks = useMemo(() => listBlocks(puzzle.bands), [puzzle.bands])
   const values = useMemo(() => puzzle.categories.flatMap((category) => category.values), [puzzle.categories])
   const parsed = useParsedClues(puzzle.clues, values)
@@ -268,14 +271,14 @@ export default function MobileWorkspace({
           <div className="m-cols">
             {grid.colValues.map((value, j) => (
               <span key={value} className={tag(value, focus, here && here.c === j)}>
-                {plain(value)}
+                {plain(term(value))}
               </span>
             ))}
           </div>
           <div className="m-rows">
             {grid.rowValues.map((value, i) => (
               <span key={value} className={tag(value, focus, here && here.r === i)}>
-                {plain(value)}
+                {plain(term(value))}
               </span>
             ))}
           </div>
@@ -324,7 +327,7 @@ export default function MobileWorkspace({
         {here ? (
           <>
             <p className="m-cap-main">
-              <b>{plain(grid.rowValues[here.r])}</b> and <b>{plain(grid.colValues[here.c])}</b>
+              <b>{plain(term(grid.rowValues[here.r]))}</b> and <b>{plain(term(grid.colValues[here.c]))}</b>
             </p>
             <p className="m-cap-sub">
               {say(pickedMark)}

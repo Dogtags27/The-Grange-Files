@@ -47,7 +47,7 @@ export function textReport({ result, seconds, penalty, stats }) {
     "",
     rank.joke,
     rule,
-    "Northeastern MSCS Align, CS5002. Built by friends, saved by nobody.",
+    "MSCS Align, CS5002. A personal project. Built by friends, saved by nobody.",
   ].join("\n")
 }
 
@@ -200,7 +200,7 @@ export function reportDocument({ puzzle, result, cells, seconds, penalty, stats,
   const body = `
 <header class="mast">
   <div>
-    <p class="kicker">Northeastern University, MSCS Align, CS5002</p>
+    <p class="kicker">Puzzle Challenge, MSCS Align, CS5002</p>
     <h1>The Grange Display Case</h1>
     <p class="sub">File CS5002-1, closed ${esc(new Date().toLocaleString())}</p>
   </div>
@@ -232,7 +232,7 @@ export function downloadHtml(name, html) {
 export function printSheet(puzzle, cells) {
   const body = `
 <h1>The Grange Display Case</h1>
-<p class="sub">File CS5002-1 | Northeastern MSCS Align | Green ticks mean matched, red crosses mean ruled out.</p>
+<p class="sub">File CS5002-1 | MSCS Align, CS5002 | Green ticks mean matched, red crosses mean ruled out.</p>
 ${sheetMarkup(puzzle, cells)}
 <h2>The clues</h2>${cluesMarkup(puzzle)}`
   const frame = document.createElement("iframe")

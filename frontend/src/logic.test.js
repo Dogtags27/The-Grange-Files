@@ -89,6 +89,14 @@ test("clue text splits around known values, ignoring a trailing full stop", () =
     ["Shane", "Mines", "I was fishing."],
   )
   assert.equal(parts.map((part) => part.text).join(""), 'Shane was in the Mines, and said "I was fishing".')
+  const buried = splitClue("The same Mines.", values)
+  assert.deepEqual(
+    buried.filter((part) => part.value).map((part) => part.value),
+    ["Mines"],
+  )
+  const han = splitClue("Shane在矿井。", ["Mines"], () => "矿井")
+  assert.equal(han[1].value, "Mines")
+  assert.equal(han.map((part) => part.text).join(""), "Shane在矿井。")
 })
 
 test("collectMarks sends ticks and the player's own crosses, not derived ones", () => {

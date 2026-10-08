@@ -140,20 +140,41 @@ export function countAllTicks(state) {
   return total
 }
 
-export function splitClue(text, values) {
-  const lookup = new Map()
-  values.forEach((value) => {
-    lookup.set(value.replace(/\.$/, ""), value)
-  })
-  const keys = [...lookup.keys()].sort((a, b) => b.length - a.length)
-  const escaped = keys.map((key) => key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-  const pattern = new RegExp(`\\b(${escaped.join("|")})\\b`, "g")
-  return text
-    .split(pattern)
-    .map((part, index) =>
-      index % 2 === 1
-        ? { text: part, value: lookup.get(part) }
-        : { text: part, value: null },
+const letter = /[\p{L}\p{N}]/u
+const openScript = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u
+
+function edged(text, start, end) {
+  const before = start > 0 ? text[start - 1] : ""
+  const after = end < text.length ? text[end] : ""
+  if (before && letter.test(before) && letter.test(text[start])) return false
+  if (after && letter.test(after) && letter.test(text[end - 1])) return false
+  return true
+}
+
+export function splitClue(text, values, labelOf = (value) => value.replace(/\.$/, "")) {
+  const items = values
+    .map((value) => ({ value, label: String(labelOf(value) ?? "").replace(/\.$/, "") }))
+    .filter((item) => item.label.length > 0)
+    .sort((a, b) => b.label.length - a.label.length)
+  const parts = []
+  let plain = ""
+  let i = 0
+  while (i < text.length) {
+    const hit = items.find(
+      (item) =>
+        text.startsWith(item.label, i) &&
+        (openScript.test(item.label) || edged(text, i, i + item.label.length)),
     )
-    .filter((part) => part.text !== "")
+    if (!hit) {
+      plain += text[i]
+      i += 1
+      continue
+    }
+    if (plain) parts.push({ text: plain, value: null })
+    plain = ""
+    parts.push({ text: hit.label, value: hit.value })
+    i += hit.label.length
+  }
+  if (plain) parts.push({ text: plain, value: null })
+  return parts
 }

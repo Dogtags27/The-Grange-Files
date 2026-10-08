@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { pickOne } from "../api"
+import { useI18n } from "../i18n.jsx"
 import { finaleLines } from "../content"
 import { clock } from "../hooks"
 import { copyText, downloadHtml, rankFor, reportDocument, textReport } from "../report"
@@ -8,6 +9,7 @@ import NoirDesk from "../noir/NoirDesk"
 import { shareEndCard } from "../shareCard"
 
 export default function Celebration({ result, puzzle, cells, seconds, penalty, stats, log, onClose }) {
+  const { t, term } = useI18n()
   const [finale] = useState(() => pickOne(finaleLines))
   const [copied, setCopied] = useState(null)
   const [cardNote, setCardNote] = useState(null)
@@ -49,14 +51,18 @@ export default function Celebration({ result, puzzle, cells, seconds, penalty, s
         label={`The desk after the verdict, with the lamp on ${culprit.suspect}`}
       />
       <div className="scene-inner">
-        <p className="file">File CS5002-1</p>
-        <h2>{culprit.suspect} did it.</h2>
-        <p className="rank">Rank earned: {rank.title}</p>
-        <p className="stamp">Case closed</p>
+        <p className="file">{t("File CS5002-1")}</p>
+        <h2>{t("{name} did it.", { name: culprit.suspect })}</h2>
+        <p className="rank">{t("Rank earned: {title}", { title: t(rank.title) })}</p>
+        <p className="stamp">{t("Case closed")}</p>
         <div className="finale">
           <p className="confession">
-            {culprit.suspect} was at the {culprit.location}, holding the {culprit.item}, and
-            insisted: "{culprit.alibi}"
+            {culprit.suspect}{" "}
+            {t('was at the {place}, holding the {item}, and insisted: "{alibi}"', {
+              place: term(culprit.location),
+              item: term(culprit.item),
+              alibi: term(culprit.alibi),
+            })}
           </p>
           <table className="ledger-table">
             <thead>
@@ -71,9 +77,9 @@ export default function Celebration({ result, puzzle, cells, seconds, penalty, s
               {solution.map((row) => (
                 <tr key={row.suspect} className={row.suspect === culprit.suspect ? "culprit" : undefined}>
                   <td data-label="Suspect">{row.suspect}</td>
-                  <td data-label="Location">{row.location}</td>
-                  <td data-label="Item">{row.item}</td>
-                  <td data-label="Alibi">{row.alibi}</td>
+                  <td data-label="Location">{term(row.location)}</td>
+                  <td data-label="Item">{term(row.item)}</td>
+                  <td data-label="Alibi">{term(row.alibi)}</td>
                 </tr>
               ))}
             </tbody>
@@ -96,23 +102,23 @@ export default function Celebration({ result, puzzle, cells, seconds, penalty, s
           <p className="rank-joke">{rank.joke}</p>
           <div className="scene-actions">
             <button type="button" className="solid" onClick={shareCard}>
-              Share the end card
+              {t("Share the end card")}
             </button>
             <button type="button" className="ghost" onClick={copy}>
-              Copy the report
+              {t("Copy the report")}
             </button>
             <button
               type="button"
               className="ghost"
               onClick={() => downloadHtml("grange-case-file.html", reportDocument(data))}
             >
-              Download the full case file
+              {t("Download the full case file")}
             </button>
             <button type="button" className="ghost" onClick={onClose}>
-              Look at my grid
+              {t("Look at my grid")}
             </button>
             <Link className="ghost" to="/">
-              Back to the case file
+              {t("Back to the case file")}
             </Link>
           </div>
           <p className="copy-note" role="status">

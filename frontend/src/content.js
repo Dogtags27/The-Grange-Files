@@ -1,6 +1,6 @@
 export const story = [
   "Mayor Lewis has called everyone together in a panic. Someone sabotaged the Grange Display on the night before the Fall Fair.",
-  "One of the villagers is guilty, and he needs your help to work out who did it, where it happened, what item they used, and what they claimed as an alibi. The alibis might not make sense, but they stay consistent across suspects.",
+  "One of the villagers is guilty. Mayor Lewis needs your help to work out who did it, where it happened, what item they used, and what they claimed as an alibi. The alibis might not make sense, but they stay consistent across suspects.",
 ]
 
 export const groundRule =
@@ -154,7 +154,7 @@ export const legal = {
   terms: {
     title: "Terms of use",
     items: [
-      "This is a class project made by friends in MSCS Align for CS5002. It is not run, endorsed, or reviewed by Northeastern University.",
+      "This is a personal project for MSCS Align, CS5002. There is no fee, and the puzzle is a class challenge.",
       "Use it for fun. The puzzle is meant to be solved with the clues alone, and the page only checks the final accusation.",
       "No warranty. If something breaks, tell one of us and we will fix it when homework allows.",
       "We can change or remove the puzzle at any time. Stardew Valley belongs to its creators and is only borrowed here for a story.",
@@ -167,6 +167,17 @@ export const legal = {
       "Your solo marks, ticks, and timer stay in this browser so a refresh can pick up the sheet. Nothing is uploaded. Clear the sheet or finish the case and that local copy goes away.",
       "Fonts are served from this site, so no third party sees you visit.",
       "Nothing is sold or shared. Shared tables live only in memory on the server for as long as people stay seated.",
+    ],
+  },
+  credits: {
+    title: "Credits",
+    items: [
+      "This is a personal project for MSCS Align, CS5002. There is no fee, no ad, and no payment to anyone for playing it.",
+      "The logic problem is a class challenge. I did not write it. I wrapped it so the same work would be something people wanted to sit with.",
+      "Stardew Valley, its villagers, and its place names belong to their creators. They are a story frame here. I claim no ownership of that world, and I make no money from it.",
+      "The office models are the Detective Office LowPoly Pack by Tarasov, used under that pack's license. The portraits are Open Peeps by Pablo Stanley, through DiceBear. The type is Fraunces and Atkinson Hyperlegible, with Noto for Cyrillic.",
+      "Classmates were leaving the challenge problems alone. The logic was sound. It was not wrapped as something you would want to open. A desk, a lamp, and a case file were the attempt to change that.",
+      "Careful use of AI, and other new ways of teaching, can carry a hard idea to more people and make them want to try it. That is the reason this page exists.",
     ],
   },
 }

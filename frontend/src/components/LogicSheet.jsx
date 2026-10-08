@@ -1,4 +1,5 @@
 import { useRef, useState } from "react"
+import { useI18n } from "../i18n.jsx"
 import { countTicks } from "../logic"
 import Mark from "./Mark"
 
@@ -113,6 +114,7 @@ export default function LogicSheet({
   timer,
   panic,
 }) {
+  const { t, term } = useI18n()
   const [hover, setHover] = useState(null)
   const [active, setActive] = useState(`${bands[0].grids[0].id}:0:0`)
   const sheet = useRef(null)
@@ -150,16 +152,16 @@ export default function LogicSheet({
   return (
     <div className={pencil ? "sheet penciling" : "sheet"} ref={sheet}>
       <div className="sheet-head">
-        <p className="corner">Hover a cell to follow its row and column.</p>
+        <p className="corner">{t("Hover a cell to follow its row and column.")}</p>
         {columns.map((column, colIndex) => (
           <div className="colband" key={column.id}>
-            <p className="band-name">{column.name}</p>
+            <p className="band-name">{term(column.name)}</p>
             <div className="vlabels">
               {column.values.map((value, j) => {
                 const lit = hover && hover.colIndex === colIndex && hover.c === j
                 return (
-                  <span key={value} className={labelClass(value, focus, lit)} title={value}>
-                    {value}
+                  <span key={value} className={labelClass(value, focus, lit)} title={term(value)}>
+                    {term(value)}
                   </span>
                 )
               })}
@@ -171,14 +173,14 @@ export default function LogicSheet({
         <section className="sheet-band" key={band.row.id}>
           <div className="band-body">
             <div className="band-title">
-              <span>{band.row.name}</span>
+              <span>{term(band.row.name)}</span>
             </div>
             <div className="hlabels">
               {band.row.values.map((value, i) => {
                 const lit = hover && hover.bandId === band.row.id && hover.r === i
                 return (
-                  <span key={value} className={labelClass(value, focus, lit)} title={value}>
-                    {value}
+                  <span key={value} className={labelClass(value, focus, lit)} title={term(value)}>
+                    {term(value)}
                   </span>
                 )
               })}

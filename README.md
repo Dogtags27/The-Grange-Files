@@ -12,7 +12,7 @@
 
 Mayor Lewis called a meeting. Someone sabotaged the Grange Display the night before the Fall Fair. You get a logic sheet, fourteen clues, and an Elder who sells advice by the minute. The badge at the end is a bottle cap.
 
-This is a Puzzle Baron–style logic grid dressed as a Stardew Valley case file. Built by friends in Northeastern’s MSCS Align for **CS5002**. Not run, endorsed, or reviewed by the university. Pierre hung a sign saying “Detective approved” anyway.
+This is a Puzzle Baron–style logic grid dressed as a Stardew Valley case file. A personal project for MSCS Align, **CS5002**. The puzzle is a class challenge, and the Stardew framing is borrowed. Pierre hung a sign saying “Detective approved” anyway.
 
 <p align="center">
   <img src="docs/mark.svg" alt="" width="48" />
