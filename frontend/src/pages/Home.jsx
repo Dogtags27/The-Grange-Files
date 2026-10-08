@@ -19,12 +19,16 @@ const ROOM_WAIT_MS = 60 * 1000
 const DESK_MS = 10500
 const SETTLE_MS = 2200
 
-function skipIntro() {
+function introSeen() {
   try {
-    return !canUse3d() || prefersStill() || sessionStorage.getItem(SEEN) === "1"
+    return sessionStorage.getItem(SEEN) === "1"
   } catch {
     return true
   }
+}
+
+function skipIntro() {
+  return !canUse3d() || prefersStill() || introSeen()
 }
 
 function bannerHeight(vh) {
@@ -33,7 +37,7 @@ function bannerHeight(vh) {
 
 export default function Home() {
   const [phase, setPhase] = useState(() => (skipIntro() ? "done" : "room"))
-  const [begun, setBegun] = useState(false)
+  const [begun, setBegun] = useState(introSeen)
   const [vh, setVh] = useState(() => window.innerHeight)
   const [puzzle, setPuzzle] = useState(null)
   const [failed, setFailed] = useState(false)
@@ -43,6 +47,7 @@ export default function Home() {
   const { t, term } = useI18n()
 
   function begin() {
+    markSeen()
     const bed = introBed()
     if (phase === "room") bed.enterRoom()
     else if (phase === "desk") bed.approach()
@@ -96,7 +101,6 @@ export default function Home() {
     if (!begun) return undefined
     const next = { room: ["desk", ROOM_WAIT_MS], desk: ["settle", DESK_MS], settle: ["done", SETTLE_MS] }[phase]
     if (!next) return undefined
-    if (phase === "room") markSeen()
     const id = setTimeout(() => setPhase(next[0]), next[1])
     return () => clearTimeout(id)
   }, [phase, begun])

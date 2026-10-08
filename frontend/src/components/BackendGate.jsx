@@ -83,6 +83,33 @@ function Practice() {
   )
 }
 
+function digits(total) {
+  const whole = Math.max(0, total)
+  const min = String(Math.floor(whole / 60)).padStart(2, "0")
+  const sec = String(whole % 60).padStart(2, "0")
+  return { min, sec }
+}
+
+function Clock({ total, label }) {
+  const { min, sec } = digits(total)
+  return (
+    <div className="gate-clock" aria-label={`${label}: ${min} minutes ${sec} seconds`}>
+      <div className="gate-digits" aria-hidden="true">
+        <span>{min[0]}</span>
+        <span>{min[1]}</span>
+        <b>:</b>
+        <span>{sec[0]}</span>
+        <span>{sec[1]}</span>
+      </div>
+      <p className="gate-clock-units" aria-hidden="true">
+        <span>min</span>
+        <span>sec</span>
+      </p>
+      <p className="gate-clock-caption">{label}</p>
+    </div>
+  )
+}
+
 function Waiting() {
   const [seconds, setSeconds] = useState(0)
   const [tip, setTip] = useState(() => Math.floor(Math.random() * TIPS.length))
@@ -122,10 +149,12 @@ function Waiting() {
       <h1 className="gate-title">The case file is still in the cabinet</h1>
       <p className="gate-line">{line}</p>
       <p className="gate-note">
-        Our free server sleeps when nobody visits. Waking it usually takes about {TYPICAL_SECONDS} seconds
-        {left > 0 ? ` (roughly ${left}s to go)` : ", so any moment now"}. You have waited {seconds}s.
-        This page will open the case on its own.
+        Our free server sleeps when nobody visits. This page will open the case on its own.
       </p>
+      <div className="gate-clocks">
+        <Clock total={seconds} label="Waited" />
+        <Clock total={left} label="Usually left" />
+      </div>
       <Practice />
       <div className="gate-ribbon" aria-live="off">
         <span key={tip}>{TIPS[tip]}</span>
