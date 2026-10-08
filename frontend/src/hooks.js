@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import { pickOne } from "./api"
 import { nudge } from "./content"
+import { translate, translateTerm, useI18n } from "./i18n.jsx"
 import { splitClue } from "./logic"
 
 export const NUDGE_EVERY_MS = 10 * 60 * 1000
@@ -68,7 +69,14 @@ function useMedia(query) {
 }
 
 export function useParsedClues(clues, values) {
-  return useMemo(() => clues.map((clue) => splitClue(clue, values)), [clues, values])
+  const { lang } = useI18n()
+  return useMemo(
+    () =>
+      clues.map((clue) =>
+        splitClue(translate(clue), values, (value) => translateTerm(value).replace(/\.$/, "")),
+      ),
+    [clues, values, lang],
+  )
 }
 
 export const useCompact = () => useMedia("(max-width: 700px), (max-height: 500px) and (pointer: coarse)")

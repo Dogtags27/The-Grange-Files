@@ -1,20 +1,22 @@
 import { fill, pickOne, plural } from "../api"
 import { elder } from "../content"
+import { useI18n } from "../i18n.jsx"
 import Modal from "./Modal"
 
 export function ElderConfirm({ onCancel, onConfirm }) {
+  const { t } = useI18n()
   return (
     <Modal
-      kicker="The town elder"
-      title={elder.confirmTitle}
+      kicker={t("The town elder")}
+      title={t(elder.confirmTitle)}
       onClose={onCancel}
       actions={
         <>
           <button type="button" className="ghost" onClick={onCancel}>
-            Keep thinking
+            {t("Keep thinking")}
           </button>
           <button type="button" className="solid" onClick={onConfirm} autoFocus>
-            Pay the time and ask
+            {t("Pay the time and ask")}
           </button>
         </>
       }

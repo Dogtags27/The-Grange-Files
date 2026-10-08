@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { tableRules } from "../content"
 import { useCompact } from "../hooks"
+import { useI18n } from "../i18n.jsx"
 import { createTable, joinTable, previewTable, saveSeat } from "../table"
 import Modal from "./Modal"
 
@@ -33,6 +34,7 @@ export default function TableForm({ mode, fixedCode = "", onCancel, onSeated }) 
   const [busy, setBusy] = useState(false)
   const [tick, setTick] = useState(0)
   const compact = useCompact()
+  const { t } = useI18n()
   const joining = mode === "join"
   const clean = (fixedCode || typed).trim().toLowerCase()
   const valid = CODE_RE.test(clean)
@@ -77,23 +79,23 @@ export default function TableForm({ mode, fixedCode = "", onCancel, onSeated }) 
 
   return (
     <Modal
-      kicker={joining ? "Sit down" : "Open a table"}
-      title="House rules"
+      kicker={joining ? t("Sit down") : t("Open a table")}
+      title={t("House rules")}
       onClose={onCancel}
       actions={
         <>
           <button type="button" className="ghost" onClick={onCancel}>
-            Not now
+            {t("Not now")}
           </button>
           <button type="submit" form="seat-form" className="solid" disabled={!ready || busy}>
-            {busy ? "Saving your seat..." : joining ? "Sit down" : "Open the table"}
+            {busy ? t("Saving your seat...") : joining ? t("Sit down") : t("Open the table")}
           </button>
         </>
       }
     >
       <form id="seat-form" onSubmit={go}>
         {tableRules.map((line) => (
-          <p key={line}>{line}</p>
+          <p key={line}>{t(line)}</p>
         ))}
         {joining && fixedCode && (
           <p className="modal-note">
@@ -102,7 +104,7 @@ export default function TableForm({ mode, fixedCode = "", onCancel, onSeated }) 
         )}
         {joining && !fixedCode && (
           <label className="field">
-            Table code
+            {t("Table code")}
             <input
               value={typed}
               onChange={(event) => setTyped(event.target.value)}
@@ -141,7 +143,7 @@ export default function TableForm({ mode, fixedCode = "", onCancel, onSeated }) 
           </p>
         )}
         <label className="field">
-          Your name
+          {t("Your name")}
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
@@ -149,7 +151,7 @@ export default function TableForm({ mode, fixedCode = "", onCancel, onSeated }) 
             autoComplete="nickname"
             autoFocus={!compact}
             enterKeyHint="go"
-            placeholder="Letters only"
+            placeholder={t("Letters only")}
           />
         </label>
         {joining && name.trim() && shown?.kind !== "ready" && (

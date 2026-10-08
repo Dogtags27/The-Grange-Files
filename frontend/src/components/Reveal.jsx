@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react"
 import { fill, pickOne } from "../api"
 import { revealBeats, wrongLines } from "../content"
+import { useI18n } from "../i18n.jsx"
 import NoirDesk from "../noir/NoirDesk"
 
 const BEAT_MS = 2700
 const LAST_STAGE = 7
 
 export default function Reveal({ name, suspects = [], result, failed, onWrong, onSolved, onBack }) {
+  const { t } = useI18n()
   const [stage, setStage] = useState(0)
   const [wrongLine] = useState(() => pickOne(wrongLines))
 
@@ -46,35 +48,35 @@ export default function Reveal({ name, suspects = [], result, failed, onWrong, o
         <div className="beats">
           {shownBeats.map((beat, index) => (
             <p key={beat} className={index === shownBeats.length - 1 && stage < 5 ? "beat now" : "beat"}>
-              {fill(beat, { name })}
+              {fill(t(beat), { name })}
             </p>
           ))}
         </div>
         {stage >= 5 && <p className="big name">{name}</p>}
-        {stage >= 6 && !failed && <p className="big is">is...</p>}
+        {stage >= 6 && !failed && <p className="big is">{t("is...")}</p>}
         {stage >= LAST_STAGE && !result && !failed && (
-          <p className="beat now">Mayor Lewis is squinting at the small print...</p>
+          <p className="beat now">{t("Mayor Lewis is squinting at the small print...")}</p>
         )}
         {failed && (
           <div className="verdict">
-            <p className="beat now">The envelope got lost. The backend did not answer.</p>
+            <p className="beat now">{t("The envelope got lost. The backend did not answer.")}</p>
             <button type="button" className="solid" onClick={onBack}>
-              Back to the grid
+              {t("Back to the grid")}
             </button>
           </div>
         )}
         {ready && !result.correct && (
           <div className="verdict">
-            <p className="big no">Not guilty</p>
-            <p className="beat now">{wrongLine}</p>
+            <p className="big no">{t("Not guilty")}</p>
+            <p className="beat now">{t(wrongLine)}</p>
             <button type="button" className="solid" onClick={onWrong} autoFocus>
-              Back to the grid
+              {t("Back to the grid")}
             </button>
           </div>
         )}
         {solved && (
           <div className="verdict">
-            <p className="big yes">Guilty</p>
+            <p className="big yes">{t("Guilty")}</p>
           </div>
         )}
       </div>

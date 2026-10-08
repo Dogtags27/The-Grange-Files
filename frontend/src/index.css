@@ -17,7 +17,8 @@
   --label: 204px;
   --title: 30px;
   --gap: 16px;
-  --serif: "Fraunces Variable", Georgia, serif;
+  --serif: "Fraunces Variable", "Noto Serif", "Songti SC", "Source Han Serif SC", "Noto Serif SC", "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", "Noto Naskh Arabic", "Traditional Arabic", "Amiri", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", "Noto Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Yu Gothic", "Hiragino Sans", "Noto Sans JP", "Noto Sans Arabic", "Segoe UI", Tahoma, Verdana, sans-serif;
   color-scheme: light;
 }
 
@@ -35,7 +36,7 @@ body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font-family: "Atkinson Hyperlegible", Verdana, sans-serif;
+  font-family: var(--sans);
   font-size: 17px;
   line-height: 1.45;
 }
@@ -69,6 +70,49 @@ a {
   border-top: 10px solid var(--husky);
   border-bottom: 1px solid var(--ink);
   padding: 14px 0 12px;
+}
+
+.mast-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.lang {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.lang-label {
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lang select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper-soft);
+  border: 1px solid var(--ink);
+  padding: 6px 8px;
+  min-height: 40px;
+}
+
+html[lang="ar"] body,
+html[lang="zh-Hans"] body,
+html[lang="ja"] body {
+  line-height: 1.65;
+}
+
+html[lang="ar"] .kicker,
+html[lang="ar"] .course,
+html[lang="ar"] .file,
+html[lang="ar"] .lang-label {
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .mast-link {

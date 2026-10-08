@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 import Footer from "../components/Footer"
 import Mark from "../components/Mark"
 import Masthead from "../components/Masthead"
+import { useI18n } from "../i18n.jsx"
 import { applyClick } from "../logic"
 import { GRID, answer, clues, cols, rows, steps } from "../practice"
 
@@ -20,6 +21,7 @@ function advance(from, state, flags) {
 }
 
 export default function Practice() {
+  const { t, term } = useI18n()
   const [run, setRun] = useState(FRESH)
   const { state, history, step, flags, toast, praise, used } = run
   const current = steps[step]
@@ -98,25 +100,24 @@ export default function Practice() {
       <Masthead />
       <main className="wrap practice-main">
         <header className="practice-head">
-          <p className="file">Practice file</p>
-          <h1>The Missing Pie</h1>
+          <p className="file">{t("Practice file")}</p>
+          <h1>{t("The Missing Pie")}</h1>
           <p>
-            Three villagers, three places, two clues, one minute. Learn the moves here and the real case will feel
-            familiar. Nothing here is saved.
+            {t("Three villagers, three places, two clues, one minute. Learn the moves here and the real case will feel familiar. Nothing here is saved.")}
           </p>
         </header>
         <div className="practice-body">
-          <section className="practice-board" aria-label="Practice grid">
+          <section className="practice-board" aria-label={t("Practice grid")}>
             <div className="pwrap">
               <div />
               <div className="pcols">
                 {cols.map((name) => (
-                  <span key={name}>{name}</span>
+                  <span key={name}>{term(name)}</span>
                 ))}
               </div>
               <div className="prows">
                 {rows.map((name) => (
-                  <span key={name}>{name}</span>
+                  <span key={name}>{term(name)}</span>
                 ))}
               </div>
               <div className={matched === SIZE ? "psub full" : "psub"} role="group" aria-label="Suspects against places" onKeyDown={onKeyDown}>
@@ -159,7 +160,7 @@ export default function Practice() {
                     aria-label={`Clue ${index + 1}, crossed off`}
                   />
                   <p>
-                    <span className="num">{index + 1}.</span> {clue}
+                    <span className="num">{index + 1}.</span> {t(clue)}
                   </p>
                 </li>
               ))}
@@ -178,7 +179,7 @@ export default function Practice() {
               </div>
             </div>
             {praise && current.kind !== "end" && <p className="coach-praise">{praise}</p>}
-            <h2>{current.title}</h2>
+            <h2>{t(current.title)}</h2>
             <p>{current.text}</p>
             {current.list && (
               <dl className="coach-list">

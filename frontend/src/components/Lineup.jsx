@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { fill, pickOne } from "../api"
 import { accuseLines } from "../content"
 import { useCompact, useNow } from "../hooks"
+import { useI18n } from "../i18n.jsx"
 import NoirDesk from "../noir/NoirDesk"
 import Figure from "./Figure"
 
@@ -48,10 +49,10 @@ function VoteClock({ endsAt, skew = 0, onExpire }) {
     <p className="vote-clock" role="timer" aria-live="polite">
       {left > 0 ? (
         <>
-          <b>{left}s</b> left to circle a suspect
+          {t("{left}s left to circle a suspect", { left })}
         </>
       ) : (
-        <>Time is up. Waiting for at least one circle.</>
+        <>{t("Time is up. Waiting for at least one circle.")}</>
       )}
     </p>
   )
@@ -71,6 +72,7 @@ export default function Lineup({
   onVoteExpire,
 }) {
   const compact = useCompact()
+  const { t } = useI18n()
   const [pick, setPick] = useState(null)
   const [line, setLine] = useState("")
   const shared = Array.isArray(ballots)
@@ -157,8 +159,8 @@ export default function Lineup({
   return (
     <div className="scene lineup" role="dialog" aria-modal="true" aria-label="The lineup">
       <div className="scene-inner">
-        <p className="file">The lineup</p>
-        <h2>Who did it?</h2>
+        <p className="file">{t("The lineup")}</p>
+        <h2>{t("Who did it?")}</h2>
         <p className="scene-sub">
           {shared
             ? compact
@@ -203,11 +205,11 @@ export default function Lineup({
           </div>
         </NoirDesk>
         <p className="mayor-line" aria-live="polite">
-          {note || (chosen ? line : "Mayor Lewis is waiting, and he is very bad at it.")}
+          {note || (chosen ? line : t("Mayor Lewis is waiting, and he is very bad at it."))}
         </p>
         <div className="scene-actions">
           <button type="button" className="ghost" onClick={onBack}>
-            Back to the grid
+            {t("Back to the grid")}
           </button>
           <button
             type="button"
@@ -215,7 +217,7 @@ export default function Lineup({
             disabled={shared ? presentOff : !chosen}
             onClick={() => onPresent(chosen)}
           >
-            {presentText ?? (chosen ? `Present ${chosen} to Mayor Lewis` : "Pick a suspect first")}
+            {presentText ?? (chosen ? t("Present {name} to Mayor Lewis", { name: chosen }) : t("Pick a suspect first"))}
           </button>
         </div>
       </div>

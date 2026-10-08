@@ -12,6 +12,7 @@ export default function App() {
       <Route path="/practice" element={<Practice />} />
       <Route path="/case/:code" element={<TablePlay />} />
       <Route path="/case" element={<Case />} />
+      <Route path="/credits" element={<Legal kind="credits" />} />
       <Route path="/terms" element={<Legal kind="terms" />} />
       <Route path="/privacy" element={<Legal kind="privacy" />} />
     </Routes>

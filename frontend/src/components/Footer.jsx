@@ -1,12 +1,15 @@
 import { Link } from "react-router-dom"
+import { useI18n } from "../i18n.jsx"
 
 export default function Footer() {
+  const { t } = useI18n()
   return (
     <footer className="foot">
-      <p>Built by friends in MSCS Align. Not an official Northeastern project. Solo sheets stay in this browser only.</p>
+      <p>{t("A personal project for MSCS Align, CS5002. Solo sheets stay in this browser only.")}</p>
       <nav aria-label="Legal">
-        <Link to="/terms">Terms</Link>
-        <Link to="/privacy">Privacy</Link>
+        <Link to="/credits">{t("Credits")}</Link>
+        <Link to="/terms">{t("Terms")}</Link>
+        <Link to="/privacy">{t("Privacy")}</Link>
       </nav>
     </footer>
   )

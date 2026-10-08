@@ -5,6 +5,7 @@ import ClueList from "../components/ClueList"
 import Doubt from "../components/Doubt"
 import { ElderConfirm, ElderResult } from "../components/Elder"
 import LogicSheet from "../components/LogicSheet"
+import LangSelect from "../components/LangSelect"
 import Mark from "../components/Mark"
 import MobileWorkspace, { HowTo } from "../components/MobileWorkspace"
 import Nudge from "../components/Nudge"
@@ -13,6 +14,7 @@ import Reveal from "../components/Reveal"
 import { CaseSkeleton } from "../components/Skeletons"
 import { refuseLines } from "../content"
 import { useCompact, useNudge } from "../hooks"
+import { useI18n } from "../i18n.jsx"
 import { applyClick, collectMarks, countAllTicks, placeTick, removeMarks } from "../logic"
 import { describeCell, emptyStats, printSheet } from "../report"
 import { clearSave, hasProgress, loadSave, writeSave } from "../storage"
@@ -26,6 +28,7 @@ const NO_VERDICT = { result: null, failed: false }
 const openingEntry = { t: 0, p: 0, kind: "start", text: "Opened the case file" }
 
 export default function Case() {
+  const { t } = useI18n()
   const [saved] = useState(loadSave)
   const [resumeNote, setResumeNote] = useState(() => hasProgress(saved))
   const [puzzle, setPuzzle] = useState(null)
@@ -390,24 +393,25 @@ export default function Case() {
     <div className={compact ? "case compact" : "case"}>
       <header className="topbar">
         <Link className="back" to="/">
-          Case file
+          {t("Case file")}
         </Link>
-        <h1 className="case-title">The Grange Display Case</h1>
+        <h1 className="case-title">{t("The Grange Display Case")}</h1>
+        <LangSelect />
         {compact ? (
           <TimerChip startedAt={startedAt} frozenAt={frozenAt} penalty={penalty} />
         ) : (
           <div className="actions">
             <button type="button" className="ghost" onClick={undo} disabled={!history.length}>
-              Undo
+              {t("Undo")}
             </button>
             <button type="button" className="ghost" onClick={redo} disabled={!future.length}>
-              Redo
+              {t("Redo")}
             </button>
             <button type="button" className="ghost" onClick={() => setElder({ mode: "confirm" })} disabled={!puzzle}>
-              Ask the Elder
+              {t("Ask the Elder")}
             </button>
             <button type="button" className={armed ? "ghost armed" : "ghost"} onClick={startOver}>
-              {armed ? "Really clear it all?" : "Start over"}
+              {armed ? t("Really clear it all?") : t("Start over")}
             </button>
           </div>
         )}
@@ -416,25 +420,25 @@ export default function Case() {
         <span className="swatch no">
           <Mark kind="no" />
         </span>
-        <p>One click crosses a cell.</p>
+        <p>{t("One click crosses a cell.")}</p>
         <span className="swatch yes">
           <Mark kind="yes" />
         </span>
-        <p>A second click ticks it and crosses out the rest of its row and column in that block.</p>
-        <p>A third click clears it.</p>
-        <p className="keys">Arrow keys move, Enter cycles, N pencils a maybe.</p>
+        <p>{t("A second click ticks it and crosses out the rest of its row and column in that block.")}</p>
+        <p>{t("A third click clears it.")}</p>
+        <p className="keys">{t("Arrow keys move, Enter cycles, N pencils a maybe.")}</p>
         <div className="strip-tools">
           <button
             type="button"
             className={pencil ? "ghost small on" : "ghost small"}
             aria-pressed={pencil}
             onClick={() => setPencil((prev) => !prev)}
-            title="Pencil mode (P). Right-click also pencils."
+            title={t("Pencil mode (P). Right-click also pencils.")}
           >
-            {pencil ? "Pencil on" : "Pencil"}
+            {pencil ? t("Pencil on") : t("Pencil")}
           </button>
           <button type="button" className="ghost small" onClick={() => printSheet(puzzle, cells)} disabled={!puzzle}>
-            Print sheet
+            {t("Print sheet")}
           </button>
         </div>
       </div>}
@@ -451,9 +455,9 @@ export default function Case() {
       )}
       {full && puzzle && !scene && (
         <div className="accuse-bar">
-          <p>Every block is full. Mayor Lewis has noticed and is trying very hard to look casual.</p>
+          <p>{t("Every block is full. Mayor Lewis has noticed and is trying very hard to look casual.")}</p>
           <button type="button" className="solid" onClick={openLineup} disabled={checking}>
-            {checking ? "Mayor is checking your sheet..." : "Name the culprit"}
+            {checking ? t("Mayor is checking your sheet...") : t("Name the culprit")}
           </button>
         </div>
       )}
@@ -461,7 +465,7 @@ export default function Case() {
         <div className="toast" role="status" key={toast.n}>
           <div>
             <p className="toast-title">Hold on</p>
-            <p>{toast.text}</p>
+            <p>{t(toast.text)}</p>
           </div>
           <button type="button" onClick={() => setToast(null)}>
             Close

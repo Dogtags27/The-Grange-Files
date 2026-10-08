@@ -10,6 +10,7 @@ import TableForm from "../components/TableForm"
 import { apiUrl } from "../api"
 import { groundRule, homeTease, story } from "../content"
 import { clock } from "../hooks"
+import { useI18n } from "../i18n.jsx"
 import { clearSave, hasProgress, loadSave } from "../storage"
 
 const SEEN = "grange-intro-seen"
@@ -37,6 +38,7 @@ export default function Home() {
   const [gate, setGate] = useState(null)
   const [save] = useState(() => (hasProgress() ? loadSave() : null))
   const navigate = useNavigate()
+  const { t, term } = useI18n()
 
   useEffect(() => {
     let alive = true
@@ -108,74 +110,76 @@ export default function Home() {
         {phase === "room" && (
           <div className="intro-ui">
             <div aria-hidden="true">
-              <p className="intro-title">The Grange Files</p>
-              <p className="intro-sub">File CS5002-1. One lamp is still on.</p>
+              <p className="intro-title">{t("The Grange Files")}</p>
+              <p className="intro-sub">{t("File CS5002-1. One lamp is still on.")}</p>
             </div>
             <div className="intro-actions">
               <button type="button" className="solid" onClick={() => setPhase("desk")}>
-                Step up to the desk
+                {t("Step up to the desk")}
               </button>
               <button type="button" className="intro-skip" onClick={() => setPhase("settle")}>
-                Skip
+                {t("Skip")}
               </button>
             </div>
           </div>
         )}
         {phase === "desk" && (
           <p className="intro-caption" aria-hidden="true">
-            Five names. One of them did it.
+            {t("Five names. One of them did it.")}
           </p>
         )}
       </div>
       <div className="home-body">
       <main className="wrap home-main">
         <section className="lede">
-          <p className="file">File CS5002-1</p>
-          <h1>Someone wrecked the Grange Display</h1>
+          <p className="file">{t("File CS5002-1")}</p>
+          <h1>{t("Someone wrecked the Grange Display")}</h1>
           {story.map((paragraph) => (
             <p className="deck" key={paragraph}>
-              {paragraph}
+              {t(paragraph)}
             </p>
           ))}
-          <p className="ground">{groundRule}</p>
+          <p className="ground">{t(groundRule)}</p>
           {save ? (
             <>
               <Link className="enter" to="/case">
-                Continue the case
+                {t("Continue the case")}
               </Link>
               <p className="resume-note">
-                Sheet in this browser Â· about {clock(Math.floor((save.elapsedMs ?? 0) / 1000))} on the clock
+                {t("Sheet in this browser · about {time} on the clock", {
+                  time: clock(Math.floor((save.elapsedMs ?? 0) / 1000)),
+                })}
               </p>
               <p className="table-links">
                 <button type="button" onClick={startFresh}>
-                  Start a fresh sheet
+                  {t("Start a fresh sheet")}
                 </button>
-                <Link to="/practice">Show me how</Link>
+                <Link to="/practice">{t("Show me how")}</Link>
                 <button type="button" onClick={() => setGate("create")}>
-                  Open a table
+                  {t("Open a table")}
                 </button>
                 <button type="button" onClick={() => setGate("join")}>
-                  Join a table
+                  {t("Join a table")}
                 </button>
               </p>
             </>
           ) : (
             <>
               <Link className="enter" to="/case">
-                Take the case
+                {t("Take the case")}
               </Link>
               <p className="table-links">
-                <Link to="/practice">Show me how</Link>
+                <Link to="/practice">{t("Show me how")}</Link>
                 <button type="button" onClick={() => setGate("create")}>
-                  Open a table
+                  {t("Open a table")}
                 </button>
                 <button type="button" onClick={() => setGate("join")}>
-                  Join a table
+                  {t("Join a table")}
                 </button>
               </p>
             </>
           )}
-          <p className="judges">{homeTease}</p>
+          <p className="judges">{t(homeTease)}</p>
           {gate && (
             <TableForm
               mode={gate}
@@ -184,19 +188,19 @@ export default function Home() {
             />
           )}
         </section>
-        <section className="ledger" aria-label="Evidence index">
-          <h2>Evidence index</h2>
+        <section className="ledger" aria-label={t("Evidence index")}>
+          <h2>{t("Evidence index")}</h2>
           {!puzzle && !failed && <LedgerSkeleton />}
-          {failed && <p className="note">The evidence room is locked. Start the backend and refresh.</p>}
+          {failed && <p className="note">{t("The evidence room is locked. Start the backend and refresh.")}</p>}
           {puzzle && (
             <dl>
               {puzzle.categories.map((category) => (
                 <div key={category.id}>
-                  <dt>{category.name}</dt>
+                  <dt>{term(category.name)}</dt>
                   <dd>
                     <ul>
                       {category.values.map((value) => (
-                        <li key={value}>{value}</li>
+                        <li key={value}>{term(value)}</li>
                       ))}
                     </ul>
                   </dd>
