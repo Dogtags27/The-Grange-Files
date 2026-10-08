@@ -38,6 +38,7 @@ export default {
   "The Grange Files": "Les dossiers du Grange",
   "File CS5002-1. One lamp is still on.": "Dossier CS5002-1. Une lampe est encore allumée.",
   "Step up to the desk": "Approchez du bureau",
+  "Begin": "Commencer",
   "Skip": "Passer",
   "Five names. One of them did it.": "Cinq noms. L'un d'eux l'a fait.",
   "File CS5002-1": "Dossier CS5002-1",

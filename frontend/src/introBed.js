@@ -247,7 +247,8 @@ export function duckIntroBed() {
 }
 
 export function liftIntroBed() {
-  introBed().lift()
+  if (!active) return
+  active.lift()
 }
 
 export function hushIntroBed() {

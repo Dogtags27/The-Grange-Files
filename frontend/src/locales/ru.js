@@ -38,6 +38,7 @@ export default {
   "The Grange Files": "Дела Грейнджа",
   "File CS5002-1. One lamp is still on.": "Дело CS5002-1. Одна лампа ещё горит.",
   "Step up to the desk": "Подойти к столу",
+  "Begin": "Начать",
   "Skip": "Пропустить",
   "Five names. One of them did it.": "Пять имён. Один из них виноват.",
   "File CS5002-1": "Дело CS5002-1",

@@ -38,6 +38,7 @@ export default {
   "The Grange Files": "ملفات الغرانج",
   "File CS5002-1. One lamp is still on.": "ملف CS5002-1. ما زال مصباح واحد مضاء.",
   "Step up to the desk": "اقترب من المكتب",
+  "Begin": "ابدأ",
   "Skip": "تخطَّ",
   "Five names. One of them did it.": "خمسة أسماء. واحد منهم فعلها.",
   "File CS5002-1": "ملف CS5002-1",
