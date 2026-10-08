@@ -2551,3 +2551,35 @@ button.text-link {
   pointer-events: none;
   animation: fadein 1.6s ease-out 0.8s both;
 }
+
+/* Backend wake-up gate */
+.gate { max-width: 640px; margin: 0 auto; padding: 32px 20px 80px; text-align: center; color: var(--ink); }
+.gate-stage { position: relative; height: 150px; margin-bottom: 8px; }
+.gate-lens { position: absolute; left: 0; top: 10px; width: 120px; height: 120px; animation: gate-sweep 4.5s ease-in-out infinite; }
+.gate-glass { position: absolute; inset: 0 20px 20px 0; border: 8px solid var(--ink); border-radius: 50%; background: rgba(246, 240, 228, 0.55); }
+.gate-handle { position: absolute; right: 2px; bottom: 2px; width: 12px; height: 46px; background: var(--husky); border-radius: 6px; transform: rotate(-45deg); transform-origin: top; }
+.gate-print { position: absolute; left: 28px; top: 28px; width: 38px; height: 38px; border-radius: 50%; border: 3px dotted var(--no); }
+.gate-steps { position: absolute; right: 0; bottom: 0; left: 0; display: flex; justify-content: center; gap: 22px; font-size: 22px; opacity: 0.55; }
+.gate-steps span { animation: gate-step 1.5s ease-in-out infinite; }
+.gate-steps span:nth-child(2) { animation-delay: 0.25s; }
+.gate-steps span:nth-child(3) { animation-delay: 0.5s; }
+.gate-title { font-family: var(--serif); font-size: 26px; margin: 0 0 6px; }
+.gate-line { font-style: italic; color: var(--husky-deep); margin: 0 0 12px; min-height: 1.4em; }
+.gate-note { color: var(--muted); line-height: 1.5; margin: 0 auto 20px; max-width: 520px; }
+.gate-quiz { background: var(--paper-soft); border: 1px solid var(--line); padding: 14px 16px; text-align: left; margin-bottom: 20px; }
+.gate-quiz-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 6px; }
+.gate-quiz-q { margin: 0 0 10px; line-height: 1.45; }
+.gate-quiz-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.gate-quiz-opts button { font: inherit; padding: 6px 14px; background: var(--paper); border: 1px solid var(--line); color: var(--ink); cursor: pointer; }
+.gate-quiz-opts button:hover:not(:disabled) { border-color: var(--husky); }
+.gate-quiz-opts button.right { background: var(--yes); color: var(--yes-ink); border-color: var(--yes); }
+.gate-quiz-opts button.wrong { background: var(--no-wash); border-color: var(--no); }
+.gate-quiz-why { margin: 10px 0 0; font-size: 14px; color: var(--muted); }
+.gate-link { font: inherit; background: none; border: 0; padding: 0; color: var(--husky); text-decoration: underline; cursor: pointer; }
+.gate-ribbon { position: fixed; left: 0; right: 0; bottom: 0; padding: 10px 16px; background: var(--ink); color: var(--paper); font-size: 14px; text-align: center; overflow: hidden; border-top: 3px solid var(--husky); }
+.gate-ribbon span { display: inline-block; animation: gate-tip 6s linear both; }
+.gate-foot { font-size: 14px; }
+@keyframes gate-sweep { 0%, 100% { transform: translateX(0) rotate(-8deg); } 50% { transform: translateX(min(440px, 60vw)) rotate(10deg); } }
+@keyframes gate-step { 0%, 100% { transform: translateY(0); opacity: 0.3; } 50% { transform: translateY(-6px); opacity: 1; } }
+@keyframes gate-tip { 0% { opacity: 0; transform: translateY(8px); } 6%, 92% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .gate-lens, .gate-steps span, .gate-ribbon span { animation: none; } }
