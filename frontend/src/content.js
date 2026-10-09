@@ -163,7 +163,7 @@ export const legal = {
   privacy: {
     title: "Privacy",
     items: [
-      "We do not collect your data. There are no accounts, cookies, trackers, or analytics.",
+      "There are no accounts and no cookies. Vercel Web Analytics records anonymous page views (which page, rough location, browser, and device) so we can see that the site is being used. It does not identify you.",
       "Your solo marks, ticks, and timer stay in this browser so a refresh can pick up the sheet. Nothing is uploaded. Clear the sheet or finish the case and that local copy goes away.",
       "Fonts are served from this site, so no third party sees you visit.",
       "Nothing is sold or shared. Shared tables live only in memory on the server for as long as people stay seated.",
